@@ -70,10 +70,6 @@ class LSTMWithGaussianAttention(nn.Module):
         # init window
         window_t = torch.zeros(batch_size, self.num_chars, device=self.device)
 
-        # Test GPU
-        print(hidden_t[0].device)
-        print(window_t.device)
-
         return hidden_t, window_params_t, window_t
 
     def compute_window_parameters(self, hidden_t, window_params_t):
@@ -96,7 +92,7 @@ class LSTMWithGaussianAttention(nn.Module):
         alpha = alpha.unsqueeze(-1)
         beta = beta.unsqueeze(-1)
         kappa = kappa.unsqueeze(-1)
-        u_matrix = torch.arange(0, char_seq_len, dtype=torch.float).reshape(1, 1, -1)
+        u_matrix = torch.arange(0, char_seq_len, dtype=torch.float, device=self.device).reshape(1, 1, -1)
         sentences_mask = sentences_mask.unsqueeze(-1)
 
         # Compute phi (bs, chars_seq_len)

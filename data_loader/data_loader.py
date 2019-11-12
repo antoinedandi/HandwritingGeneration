@@ -33,7 +33,8 @@ class HandWritingDataset(torch.utils.data.Dataset):
         all_chars = set()
         for line in self.sentences:
             all_chars.update(line)
-        return all_chars
+        sorted_chars = sorted(list(all_chars))  # important to keep the same char2idx across experience
+        return sorted_chars
 
     def sentence2tensor(self, sentence):
         return torch.tensor(data=[self.char2idx[char] for char in sentence],

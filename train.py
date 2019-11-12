@@ -25,7 +25,7 @@ def main(config):
     valid_data_loader = data_loader.split_validation()
 
     # build model architecture, then print to console
-    model = config.init_obj('arch', module_arch)
+    model = config.init_obj('arch', module_arch, char2idx=data_loader.dataset.char2idx, device='cpu')  # TODO update
     logger.info(model)
 
     # get function handles of loss and metrics

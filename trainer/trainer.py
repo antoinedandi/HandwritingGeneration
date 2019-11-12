@@ -43,13 +43,10 @@ class Trainer(BaseTrainer):
             # Moving input data to device
             sentences, sentences_mask = sentences.to(self.device), sentences_mask.to(self.device)
             strokes, strokes_mask = strokes.to(self.device), strokes_mask.to(self.device)
-            batch_size = strokes.size(0)
 
             # TODO : add gradient clipping option
             # Compute the loss and perform an optimization step
             self.optimizer.zero_grad()
-            self.model.hidden_1 = self.model.init_hidden(batch_size)
-            self.model.hidden_2 = self.model.init_hidden(batch_size)
             output_network = self.model(sentences, sentences_mask, strokes, strokes_mask)
             gaussian_params = self.model.compute_gaussian_parameters(output_network)
             loss = self.criterion(gaussian_params, strokes, strokes_mask)

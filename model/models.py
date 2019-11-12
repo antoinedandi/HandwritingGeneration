@@ -13,12 +13,13 @@ from model.custom_layers.lstm_with_gaussian_attention import LSTMWithGaussianAtt
 
 # TODO : mef dropout: x = F.dropout(x, training=self.training)
 # TODO : tej option multi-gpu
+# TODO add char2idx and device args to our model when we create it
 
 class UnconditionalHandwriting(BaseModel):
     """Class for Unconditional Handwriting generation
     """
 
-    def __init__(self, input_dim, hidden_dim, num_layers, num_gaussian, dropout):
+    def __init__(self, input_dim, hidden_dim, num_layers, num_gaussian, dropout, char2idx, device):
         super(UnconditionalHandwriting, self).__init__()
 
         # Params
@@ -30,6 +31,7 @@ class UnconditionalHandwriting(BaseModel):
         self.dropout = dropout
 
         # Setting an attribute device
+        # TODO faut mettre ca qq part et tej les options liées au nb de gpu..
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         # Define the RNN and the Mixture Density layers
@@ -38,13 +40,20 @@ class UnconditionalHandwriting(BaseModel):
                            num_layers=num_layers,
                            dropout=dropout,
                            batch_first=True)
-        self.hidden = self.init_hidden()
         self.norm_layer = nn.LayerNorm(hidden_dim)
         self.mixture_density_layer = nn.Linear(self.hidden_dim, self.output_dim)
 
-    def forward(self, strokes):
+    def forward(self, sentences, sentences_mask, strokes, strokes_mask):
+        # We don't need the sentences for the unconditional handwriting generation
 
-        output_rnn, self.hidden = self.rnn(strokes, self.hidden)
+        _, _, strokes, strokes_mask = sentences, sentences_mask, strokes, strokes_mask
+        batch_size = strokes.size(0)
+
+        # Initialization of the hidden layers
+        hidden_1 = self.init_hidden(batch_size)
+        # self.hidden_2 = self.init_hidden(batch_size)
+
+        output_rnn, hidden_1 = self.rnn(strokes, hidden_1)
         normalized_output_rnn = self.norm_layer(output_rnn)
 
         # TODO add a skip connexion & surtout 3 lstms
@@ -80,19 +89,22 @@ class UnconditionalHandwriting(BaseModel):
 
     def generate_sample(self, sampling_bias=1.2):
         # Prepare input sequence
-        stroke = [0., 0., 0.]  # eos = 1 to tell the model to generate a new sample dx and dy initialized at 0
-        stroke = torch.tensor(stroke).view(1, 1, 3)  # format in (bs, seq_len, n_features) mode
+        stroke = [0., 0., 0.]  # init sample
+        stroke = torch.tensor(stroke).view(1, 1, 3)  # (bs, seq_len, 3)
         list_strokes = []
 
         # Initialization of the hidden layer of the rnn
-        self.hidden = self.init_hidden(stroke.size(0))
+        hidden_1 = self.init_hidden(stroke.size(0))
 
         with torch.no_grad():
             for i in range(1000):  # sampling len
 
+                # TODO rajouter les autres lstm
                 # Computing the gaussian mixture parameters
-                output_network = self.forward(stroke)
-                gaussian_params = self.compute_gaussian_parameters(output_network, sampling_bias)
+                output_rnn, hidden_1 = self.rnn(stroke, hidden_1)
+                normalized_output_rnn = self.norm_layer(output_rnn)
+                output_mdl = self.mixture_density_layer(normalized_output_rnn)
+                gaussian_params = self.compute_gaussian_parameters(output_mdl, sampling_bias)
                 pi, mu1, mu2, sigma1, sigma2, rho, eos = gaussian_params
 
                 # Sample the next stroke
@@ -122,7 +134,8 @@ class ConditionalHandwriting(BaseModel):
     """Class for Conditional Handwriting generation
     """
 
-    def __init__(self, input_dim, hidden_dim, num_layers, num_gaussian_out, dropout, num_chars, num_gaussian_window):
+    def __init__(self, input_dim, hidden_dim, num_layers, num_gaussian_out, dropout, num_chars, num_gaussian_window,
+                 char2idx, device):
         super(ConditionalHandwriting, self).__init__()
 
         # Params
@@ -134,6 +147,7 @@ class ConditionalHandwriting(BaseModel):
         self.output_dim = 6 * num_gaussian_out + 1
         self.num_layers = num_layers
         self.dropout = dropout
+        self.char2idx = char2idx
 
         # Setting an attribute device
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -150,7 +164,6 @@ class ConditionalHandwriting(BaseModel):
                              num_layers=num_layers,
                              dropout=dropout,
                              batch_first=True)
-        self.hidden_2 = self.init_hidden()
 
         # TODO add a third rnn
 
@@ -169,12 +182,19 @@ class ConditionalHandwriting(BaseModel):
         :return: output network
         """
 
-        output_rnn_attention, window = self.rnn_with_gaussian_attention(strokes=strokes,
-                                                                        sentences=sentences,
-                                                                        sentences_mask=sentences_mask)
+        batch_size = strokes.size(0)
+
+        # TODO add other LSTM
+        # Initialization of the hidden layers
+        hidden_2 = self.init_hidden(batch_size)
+        # self.hidden_2 = self.init_hidden(batch_size)
+
+        output_rnn_attention, window, _ = self.rnn_with_gaussian_attention(strokes=strokes,
+                                                                           sentences=sentences,
+                                                                           sentences_mask=sentences_mask)
 
         input_rnn_2 = torch.cat([strokes, window, output_rnn_attention], dim=-1)
-        output_rnn_2, self.hidden_2 = self.rnn_2(input_rnn_2, self.hidden_2)
+        output_rnn_2, hidden_2 = self.rnn_2(input_rnn_2, hidden_2)
         output_rnn_2 = self.norm_layer(output_rnn_2)
 
         output_mdl = self.mixture_density_layer(output_rnn_2)
@@ -200,22 +220,49 @@ class ConditionalHandwriting(BaseModel):
 
         return pi, mu1, mu2, sigma1, sigma2, rho, eos
 
-    def generate_sample(self, sampling_bias=1.2):
+    def generate_cond_sample(self, sentence, sampling_bias=1.2):
+
+        # Adding a space char to the sentence for computing the exit condition
+        sentence += ' '
+
+        # Transforming the sentence into a tensor
+        sentence = torch.tensor(data=[self.char2idx[char] for char in sentence],
+                                dtype=torch.long)
+
+        sentence_mask = torch.ones(sentence.shape)
+
         # Prepare input sequence
-        stroke = [0., 0., 0.]  # eos = 1 to tell the model to generate a new sample dx and dy initialized at 0
-        stroke = torch.tensor(stroke).view(1, 1, 3)  # format in (bs, seq_len, n_features) mode
+        stroke = [0., 0., 0.]  # init the sample
+        stroke = torch.tensor(stroke).view(1, 1, 3)  # (bs, seq_len, 3)
         list_strokes = []
 
         # Initialization of the hidden layer of the rnn
-        self.hidden = self.init_hidden(stroke.size(0))
+        self.rnn_with_gaussian_attention.training = False  # Set training = False in order to keep the hidden states
+        hidden_2 = self.init_hidden(stroke.size(0))
 
         with torch.no_grad():
             for i in range(1000):  # sampling len
 
+                # TODO add other LSTM
                 # Computing the gaussian mixture parameters
-                output_network = self.forward(stroke)
-                gaussian_params = self.compute_gaussian_parameters(output_network, sampling_bias)
+                output_rnn_attention, window, phi = self.rnn_with_gaussian_attention(strokes=stroke,
+                                                                                     sentences=sentence,
+                                                                                     sentences_mask=sentence_mask)
+                input_rnn_2 = torch.cat([stroke, window, output_rnn_attention], dim=-1)
+                output_rnn_2, hidden_2 = self.rnn_2(input_rnn_2, hidden_2)
+                output_rnn_2 = self.norm_layer(output_rnn_2)
+                output_mdl = self.mixture_density_layer(output_rnn_2)
+
+                gaussian_params = self.compute_gaussian_parameters(output_mdl, sampling_bias)
                 pi, mu1, mu2, sigma1, sigma2, rho, eos = gaussian_params
+
+                # Exit condition
+                if int(torch.argmax(phi)) == sentence.size(0):
+                    break
+
+                # # Test
+                # if i // 50 == 0:
+                #     print(i,' : ', int(torch.argmax(phi)))
 
                 # Sample the next stroke
                 eos = torch.bernoulli(eos)  # Decide whether to stop or continue the stroke
@@ -237,6 +284,7 @@ class ConditionalHandwriting(BaseModel):
                 # Adding the stroke to the list and updating the stroke
                 stroke = torch.cat([eos, x1, x2], 2)
                 list_strokes.append(stroke.squeeze().numpy())
+
         return np.array(list_strokes)
 
 

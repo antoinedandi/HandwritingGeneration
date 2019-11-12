@@ -23,6 +23,8 @@ class LSTMWithGaussianAttention(nn.Module):
                                      hidden_size=hidden_dim)
 
         self.window_layer = nn.Linear(self.hidden_dim, 3 * self.num_gaussian_window)
+        self.hidden, self.window_params, self.window = self.init_hidden_and_window()
+        self.training = True  # Training mode by default
 
     def forward(self, strokes, sentences, sentences_mask):
         batch_size, strokes_seq_len, _ = strokes.size()
@@ -30,30 +32,34 @@ class LSTMWithGaussianAttention(nn.Module):
         # The list containing the hidden states and the window states
         hidden_seq = []
         window_seq = []
+        phi_seq = []
 
-        # Initialization of the hidden state, of the window params and of the window
-        hidden_t, window_params_t, window_t = self.init_hidden_and_window(batch_size)
+        # If training : initialization of the hidden state, of the window params and of the window
+        if self.training:
+            self.hidden, self.window_params, self.window = self.init_hidden_and_window(batch_size)
 
         for t in range(strokes_seq_len):
 
             # Prepare the input for the lstm cell
             x_t = strokes[:, t, :]
-            input_t = torch.cat([x_t, window_t], dim=-1)
+            input_t = torch.cat([x_t, self.window], dim=-1)
 
             # Compute the new hidden state of the lstm cell
-            hidden_t = self.lstm_cell(input_t, hidden_t)  # 2 * (bs, hidden_dim)
+            self.hidden = self.lstm_cell(input_t, self.hidden)  # 2 * (bs, hidden_dim)
 
             # Compute the new gaussian attention window
-            window_params_t = self.compute_window_parameters(hidden_t, window_params_t)
-            window_t = self.compute_window(sentences, sentences_mask, window_params_t)   # (bs, num_chars)
+            self.window_params = self.compute_window_parameters(self.hidden, self.window_params)
+            self.window, phi = self.compute_window(sentences, sentences_mask, self.window_params)   # (bs, num_chars)
 
-            hidden_seq.append(hidden_t[0])
-            window_seq.append(window_t)
+            hidden_seq.append(self.hidden[0])
+            window_seq.append(self.window)
+            phi_seq.append(phi)
 
         hidden_seq_tensor = torch.stack(hidden_seq, dim=1)   # (bs, strokes_seq_len, hidden_dim)
         window_seq_tensor = torch.stack(window_seq, dim=1)   # (bs, strokes_seq_len, num_chars)
+        phi_seq_tensor = torch.stack(phi_seq, dim=1)         # (bs, strokes_seq_len, chars_seq_len)
 
-        return hidden_seq_tensor, window_seq_tensor
+        return hidden_seq_tensor, window_seq_tensor, phi_seq_tensor
 
     def init_hidden_and_window(self, batch_size=1):
 
@@ -80,7 +86,7 @@ class LSTMWithGaussianAttention(nn.Module):
         # Normalization of the params according to equations (49), (50), (51)
         alpha = torch.exp(alpha_hat)  # (bs, K)
         beta = torch.exp(beta_hat)
-        kappa = previous_kappa + torch.exp(kappa_hat)
+        kappa = previous_kappa + torch.exp(kappa_hat)   # TODO regularize previous kappa ?
 
         return alpha, beta, kappa
 
@@ -106,4 +112,4 @@ class LSTMWithGaussianAttention(nn.Module):
         window = window * sentences_mask.float()  # Apply the sentences mask
         window = window.sum(1)  # (bs, num_chars)
 
-        return window
+        return window, phi.squeeze(2)

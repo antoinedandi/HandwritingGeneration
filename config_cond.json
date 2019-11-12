@@ -42,10 +42,10 @@
         }
     },
     "trainer": {
-        "epochs": 25,
+        "epochs": 10,
 
         "save_dir": "saved/",
-        "save_period": 1,
+        "save_period": 2,
         "verbosity": 2,
         
         "monitor": "min val_loss",

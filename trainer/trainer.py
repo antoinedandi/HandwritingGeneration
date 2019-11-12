@@ -90,14 +90,17 @@ class Trainer(BaseTrainer):
         self.model.eval()
         self.valid_metrics.reset()
         with torch.no_grad():
-            for batch_idx, (_, _, strokes, strokes_mask) in enumerate(self.valid_data_loader):
+            for batch_idx, (sentences, sentences_mask, strokes, strokes_mask) in enumerate(self.valid_data_loader):
 
+                # Moving input data to device
+                sentences, sentences_mask = sentences.to(self.device), sentences_mask.to(self.device)
                 strokes, strokes_mask = strokes.to(self.device), strokes_mask.to(self.device)
                 batch_size = strokes.size(0)
 
                 # Compute the loss
-                self.model.hidden = self.model.init_hidden(batch_size)
-                output_network = self.model(strokes)
+                self.model.hidden_1 = self.model.init_hidden(batch_size)
+                self.model.hidden_2 = self.model.init_hidden(batch_size)
+                output_network = self.model(sentences, sentences_mask, strokes, strokes_mask)
                 gaussian_params = self.model.compute_gaussian_parameters(output_network)
                 loss = self.criterion(gaussian_params, strokes, strokes_mask)
 

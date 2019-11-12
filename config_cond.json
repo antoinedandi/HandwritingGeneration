@@ -6,12 +6,12 @@
         "type": "ConditionalHandwriting",
         "args": {
             "input_dim": 3,
-            "hidden_dim": 56,
-            "num_layers": 2,
-            "num_gaussian_out": 12,
+            "hidden_dim": 300,
+            "num_layers": 1,
+            "num_gaussian_out": 18,
             "dropout": 0.3,
             "num_chars": 78,
-            "num_gaussian_window": 8
+            "num_gaussian_window": 10
         }
     },
     "data_loader": {
@@ -42,7 +42,7 @@
         }
     },
     "trainer": {
-        "epochs": 3,
+        "epochs": 25,
 
         "save_dir": "saved/",
         "save_period": 1,

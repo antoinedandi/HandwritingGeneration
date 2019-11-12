@@ -8,7 +8,7 @@
             "input_dim": 3,
             "hidden_dim": 300,
             "num_layers": 1,
-            "num_gaussian_out": 18,
+            "num_gaussian_out": 20,
             "dropout": 0.3,
             "num_chars": 78,
             "num_gaussian_window": 10

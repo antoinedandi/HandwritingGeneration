@@ -1,20 +1,19 @@
 {
     "name": "UnconditionalHandwriting",
     "n_gpu": 1,
-
     "arch": {
         "type": "UnconditionalHandwriting",
         "args": {
             "input_dim": 3,
-            "hidden_dim": 300,
+            "hidden_dim": 56,
             "num_layers": 2,
-            "num_gaussian": 20,
+            "num_gaussian": 8,
             "dropout": 0.3
         }
     },
     "data_loader": {
         "type": "HandWritingDataLoader",
-        "args":{
+        "args": {
             "data_dir": "data/",
             "batch_size": 32,
             "shuffle": true,
@@ -24,7 +23,7 @@
     },
     "optimizer": {
         "type": "Adam",
-        "args":{
+        "args": {
             "lr": 0.001,
             "weight_decay": 0,
             "amsgrad": true
@@ -41,14 +40,11 @@
     },
     "trainer": {
         "epochs": 3,
-
         "save_dir": "saved/",
         "save_period": 1,
         "verbosity": 2,
-        
         "monitor": "min val_loss",
         "early_stop": 10,
-
         "tensorboard": true
     }
 }

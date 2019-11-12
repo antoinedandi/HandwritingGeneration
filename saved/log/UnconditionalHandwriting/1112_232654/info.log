@@ -1,0 +1,11 @@
+2019-11-12 23:26:55,017 - train - INFO - UnconditionalHandwriting(
+  (rnn_1): LSTM(3, 56, num_layers=2, batch_first=True, dropout=0.3)
+  (rnn_2): LSTM(59, 56, num_layers=2, batch_first=True, dropout=0.3)
+  (rnn_3): LSTM(59, 56, num_layers=2, batch_first=True, dropout=0.3)
+  (mixture_density_layer): Linear(in_features=168, out_features=49, bias=True)
+)
+Trainable parameters: 150969
+2019-11-12 23:26:55,018 - trainer - WARNING - Warning: There's no GPU available on this machine,training will be performed on CPU.
+2019-11-12 23:26:55,637 - root - INFO - Failed to import cuda module: No module named 'caffe2.python.caffe2_pybind11_state_gpu'
+2019-11-12 23:26:55,638 - root - INFO - Failed to import AMD hip module: No module named 'caffe2.python.caffe2_pybind11_state_hip'
+2019-11-12 23:26:55,638 - root - WARNING - This caffe2 python run does not have GPU support. Will run in CPU only mode.

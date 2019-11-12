@@ -35,13 +35,26 @@ class UnconditionalHandwriting(BaseModel):
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         # Define the RNN and the Mixture Density layers
-        self.rnn = nn.LSTM(input_size=input_dim,
-                           hidden_size=hidden_dim,
-                           num_layers=num_layers,
-                           dropout=dropout,
-                           batch_first=True)
-        self.norm_layer = nn.LayerNorm(hidden_dim)
-        self.mixture_density_layer = nn.Linear(self.hidden_dim, self.output_dim)
+        self.rnn_1 = nn.LSTM(input_size=input_dim,
+                             hidden_size=hidden_dim,
+                             num_layers=num_layers,
+                             dropout=dropout,
+                             batch_first=True)
+
+        self.rnn_2 = nn.LSTM(input_size=input_dim + hidden_dim,
+                             hidden_size=hidden_dim,
+                             num_layers=num_layers,
+                             dropout=dropout,
+                             batch_first=True)
+
+        self.rnn_3 = nn.LSTM(input_size=input_dim + hidden_dim,
+                             hidden_size=hidden_dim,
+                             num_layers=num_layers,
+                             dropout=dropout,
+                             batch_first=True)
+
+        #  self.norm_layer = nn.LayerNorm(hidden_dim) # TODO see if useful
+        self.mixture_density_layer = nn.Linear(3 * self.hidden_dim, self.output_dim)
 
     def forward(self, sentences, sentences_mask, strokes, strokes_mask):
         # We don't need the sentences for the unconditional handwriting generation
@@ -51,20 +64,25 @@ class UnconditionalHandwriting(BaseModel):
 
         # Initialization of the hidden layers
         hidden_1 = self.init_hidden(batch_size)
-        # self.hidden_2 = self.init_hidden(batch_size)
+        hidden_2 = self.init_hidden(batch_size)
+        hidden_3 = self.init_hidden(batch_size)
 
-        output_rnn, hidden_1 = self.rnn(strokes, hidden_1)
-        normalized_output_rnn = self.norm_layer(output_rnn)
+        # Forward pass
 
-        # TODO add a skip connexion & surtout 3 lstms
+        # Fist rnn
+        output_rnn_1, hidden_1 = self.rnn_1(strokes, hidden_1)
+        # Second rnn
+        input_rnn_2 = torch.cat([strokes, output_rnn_1], dim=-1)
+        output_rnn_2, hidden_2 = self.rnn_2(input_rnn_2, hidden_2)
+        # Third rnn
+        input_rnn_3 = torch.cat([strokes, output_rnn_2], dim=-1)
+        output_rnn_3, hidden_3 = self.rnn_3(input_rnn_3, hidden_3)
+        # Application of the mixture density layer
+        input_mdl  = torch.cat([output_rnn_1, output_rnn_2, output_rnn_3], dim=-1)
+        output_mdl = self.mixture_density_layer(input_mdl)
 
         # Clipping the gradients of the output of the rnn
-        nn.utils.clip_grad_value_(normalized_output_rnn, 10)
-
-        output_mdl = self.mixture_density_layer(normalized_output_rnn)
-
-        # Gradient clipping of the output of the mdl
-        nn.utils.clip_grad_value_(output_mdl, 100)  # TODO check mais ca ca sert a rien jpense
+        #nn.utils.clip_grad_value_(normalized_output_rnn, 10)  # TODO check mais ca ca sert a rien jpense
 
         return output_mdl
 
@@ -93,22 +111,31 @@ class UnconditionalHandwriting(BaseModel):
         stroke = torch.tensor(stroke).view(1, 1, 3)  # (bs, seq_len, 3)
         list_strokes = []
 
-        # Initialization of the hidden layer of the rnn
+        # Initialization of the hidden layers
         hidden_1 = self.init_hidden(stroke.size(0))
+        hidden_2 = self.init_hidden(stroke.size(0))
+        hidden_3 = self.init_hidden(stroke.size(0))
 
         with torch.no_grad():
             for i in range(1000):  # sampling len
 
-                # TODO rajouter les autres lstm
+                # First rnn
+                output_rnn_1, hidden_1 = self.rnn_1(stroke, hidden_1)
+                # Second rnn
+                input_rnn_2 = torch.cat([stroke, output_rnn_1], dim=-1)
+                output_rnn_2, hidden_2 = self.rnn_2(input_rnn_2, hidden_2)
+                # Third rnn
+                input_rnn_3 = torch.cat([stroke, output_rnn_2], dim=-1)
+                output_rnn_3, hidden_3 = self.rnn_3(input_rnn_3, hidden_3)
+                # Application of the mixture density layer
+                input_mdl = torch.cat([output_rnn_1, output_rnn_2, output_rnn_3], dim=-1)
+                output_mdl = self.mixture_density_layer(input_mdl)
                 # Computing the gaussian mixture parameters
-                output_rnn, hidden_1 = self.rnn(stroke, hidden_1)
-                normalized_output_rnn = self.norm_layer(output_rnn)
-                output_mdl = self.mixture_density_layer(normalized_output_rnn)
                 gaussian_params = self.compute_gaussian_parameters(output_mdl, sampling_bias)
                 pi, mu1, mu2, sigma1, sigma2, rho, eos = gaussian_params
 
                 # Sample the next stroke
-                eos = torch.bernoulli(eos)  # Decide whether to stop or continue the stroke
+                eos = torch.bernoulli(eos)         # Decide whether to stop or continue the stroke
                 idx = torch.multinomial(pi[0], 1)  # Pick a gaussian with a multinomial law based on weights pi
 
                 # Select the parameters of the picked gaussian
@@ -153,11 +180,11 @@ class ConditionalHandwriting(BaseModel):
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         # Define RNN layers
-        self.rnn_with_gaussian_attention = LSTMWithGaussianAttention(input_dim=input_dim,
-                                                                     hidden_dim=hidden_dim,
-                                                                     num_gaussian_window=num_gaussian_window,
-                                                                     num_chars=num_chars,
-                                                                     device=self.device)
+        self.rnn_1_with_gaussian_attention = LSTMWithGaussianAttention(input_dim=input_dim,
+                                                                       hidden_dim=hidden_dim,
+                                                                       num_gaussian_window=num_gaussian_window,
+                                                                       num_chars=num_chars,
+                                                                       device=self.device)
 
         self.rnn_2 = nn.LSTM(input_size=input_dim + hidden_dim + num_chars,
                              hidden_size=hidden_dim,
@@ -165,13 +192,14 @@ class ConditionalHandwriting(BaseModel):
                              dropout=dropout,
                              batch_first=True)
 
-        # TODO add a third rnn
-
-        # Define Norm layers: We normalize the output of the last RNN
-        self.norm_layer = nn.LayerNorm(hidden_dim)
+        self.rnn_3 = nn.LSTM(input_size=input_dim + hidden_dim + num_chars,
+                             hidden_size=hidden_dim,
+                             num_layers=num_layers,
+                             dropout=dropout,
+                             batch_first=True)
 
         # Define the mixture density layer
-        self.mixture_density_layer = nn.Linear(self.hidden_dim, self.output_dim)
+        self.mixture_density_layer = nn.Linear(3 * self.hidden_dim, self.output_dim)
 
     def forward(self, sentences, sentences_mask, strokes, strokes_mask):
         """
@@ -184,20 +212,25 @@ class ConditionalHandwriting(BaseModel):
 
         batch_size = strokes.size(0)
 
-        # TODO add other LSTM
-        # Initialization of the hidden layers
+        # Initialization of the hidden layers for the regular rnns
         hidden_2 = self.init_hidden(batch_size)
-        # self.hidden_2 = self.init_hidden(batch_size)
+        hidden_3 = self.init_hidden(batch_size)
 
-        output_rnn_attention, window, _ = self.rnn_with_gaussian_attention(strokes=strokes,
-                                                                           sentences=sentences,
-                                                                           sentences_mask=sentences_mask)
+        # Forward pass
 
-        input_rnn_2 = torch.cat([strokes, window, output_rnn_attention], dim=-1)
+        # First rnn with gaussian attention
+        output_rnn_1_attention, window, _ = self.rnn_1_with_gaussian_attention(strokes=strokes,
+                                                                               sentences=sentences,
+                                                                               sentences_mask=sentences_mask)
+        # Second rnn
+        input_rnn_2 = torch.cat([strokes, window, output_rnn_1_attention], dim=-1)
         output_rnn_2, hidden_2 = self.rnn_2(input_rnn_2, hidden_2)
-        output_rnn_2 = self.norm_layer(output_rnn_2)
-
-        output_mdl = self.mixture_density_layer(output_rnn_2)
+        # Third rnn
+        input_rnn_3 = torch.cat([strokes, window, output_rnn_2], dim=-1)
+        output_rnn_3, hidden_3 = self.rnn_3(input_rnn_3, hidden_3)
+        # Application of the mixture density layer
+        input_mdl = torch.cat([output_rnn_1_attention, output_rnn_2, output_rnn_3], dim=-1)
+        output_mdl = self.mixture_density_layer(input_mdl)
 
         return output_mdl
 
@@ -236,23 +269,29 @@ class ConditionalHandwriting(BaseModel):
         stroke = torch.tensor(stroke).view(1, 1, 3)  # (bs, seq_len, 3)
         list_strokes = []
 
-        # Initialization of the hidden layer of the rnn
-        self.rnn_with_gaussian_attention.training = False  # Set training = False in order to keep the hidden states
+        # Set re_init = False in order to keep the hidden states during the loop
+        self.rnn_1_with_gaussian_attention.re_init = False
+        # Initialization of the hidden layer of the rnn 2 & 3
         hidden_2 = self.init_hidden(stroke.size(0))
+        hidden_3 = self.init_hidden(stroke.size(0))
 
         with torch.no_grad():
             for i in range(1000):  # sampling len
 
-                # TODO add other LSTM
-                # Computing the gaussian mixture parameters
-                output_rnn_attention, window, phi = self.rnn_with_gaussian_attention(strokes=stroke,
-                                                                                     sentences=sentence,
-                                                                                     sentences_mask=sentence_mask)
-                input_rnn_2 = torch.cat([stroke, window, output_rnn_attention], dim=-1)
+                # First rnn with gaussian attention
+                output_rnn_1_attention, window, phi = self.rnn_1_with_gaussian_attention(strokes=stroke,
+                                                                                         sentences=sentence,
+                                                                                         sentences_mask=sentence_mask)
+                # Second rnn
+                input_rnn_2 = torch.cat([stroke, window, output_rnn_1_attention], dim=-1)
                 output_rnn_2, hidden_2 = self.rnn_2(input_rnn_2, hidden_2)
-                output_rnn_2 = self.norm_layer(output_rnn_2)
-                output_mdl = self.mixture_density_layer(output_rnn_2)
-
+                # Third rnn
+                input_rnn_3 = torch.cat([stroke, window, output_rnn_2], dim=-1)
+                output_rnn_3, hidden_3 = self.rnn_3(input_rnn_3, hidden_3)
+                # Application of the mixture density layer
+                input_mdl = torch.cat([output_rnn_1_attention, output_rnn_2, output_rnn_3], dim=-1)
+                output_mdl = self.mixture_density_layer(input_mdl)
+                # Computing the gaussian mixture parameters
                 gaussian_params = self.compute_gaussian_parameters(output_mdl, sampling_bias)
                 pi, mu1, mu2, sigma1, sigma2, rho, eos = gaussian_params
 

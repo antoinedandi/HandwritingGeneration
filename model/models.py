@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from base import BaseModel
 from model.custom_layers.lstm_with_gaussian_attention import LSTMWithGaussianAttention
 
@@ -212,7 +211,7 @@ class ConditionalHandwriting(BaseModel):
 
         batch_size = strokes.size(0)
 
-        # Initialization of the hidden layers for the regular rnns
+        # Initialization of the hidden layers for the rnn 2 & 3
         hidden_2 = self.init_hidden(batch_size)
         hidden_3 = self.init_hidden(batch_size)
 
@@ -296,12 +295,13 @@ class ConditionalHandwriting(BaseModel):
                 pi, mu1, mu2, sigma1, sigma2, rho, eos = gaussian_params
 
                 # Exit condition
-                if int(torch.argmax(phi)) == sentence.size(0):
+                if int(torch.argmax(phi)) + 1 == sentence.size(0):
                     break
 
-                # # Test
-                # if i // 50 == 0:
-                #     print(i,' : ', int(torch.argmax(phi)))
+                # Test
+                if i % 50 == 0:
+                    print(i,' : ', int(torch.argmax(phi)))
+                    print(phi)
 
                 # Sample the next stroke
                 eos = torch.bernoulli(eos)  # Decide whether to stop or continue the stroke

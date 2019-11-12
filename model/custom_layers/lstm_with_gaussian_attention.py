@@ -102,6 +102,10 @@ class LSTMWithGaussianAttention(nn.Module):
         # Compute the one hot encoding of the character sequence (bs, chars_seq_len, num_chars)
         char_seq_encoding = F.one_hot(sentences, num_classes=self.num_chars).float()
 
+        print(phi.device)
+        print(sentences.device)
+        print(char_seq_encoding.device)
+
         window = phi * char_seq_encoding  # (bs, char_seq_len, num_chars)
         window = window * sentences_mask.float()  # Apply the sentences mask
         window = window.sum(1)  # (bs, num_chars)

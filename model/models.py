@@ -11,6 +11,8 @@ from model.custom_layers.lstm_with_gaussian_attention import LSTMWithGaussianAtt
 # change of the eos loss (sum over the good dimension)
 # add norm layer
 
+# TODO : mef dropout: x = F.dropout(x, training=self.training)
+
 
 class UnconditionalHandwriting(BaseModel):
     """Class for Unconditional Handwriting generation

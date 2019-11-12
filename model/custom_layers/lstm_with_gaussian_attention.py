@@ -68,6 +68,9 @@ class LSTMWithGaussianAttention(nn.Module):
         # init window
         window_t = torch.zeros(batch_size, self.num_chars)
 
+        print(hidden_t[0].device)
+        print(window_t.device)
+
         return hidden_t, window_params_t, window_t
 
     def compute_window_parameters(self, hidden_t, window_params_t):

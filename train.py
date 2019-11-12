@@ -9,7 +9,6 @@ import model.models as module_arch
 from parse_config import ConfigParser
 from trainer import Trainer
 
-# test git
 # fix random seeds for reproducibility
 SEED = 123
 torch.manual_seed(SEED)

@@ -24,7 +24,7 @@ class LSTMWithGaussianAttention(nn.Module):
 
         self.window_layer = nn.Linear(self.hidden_dim, 3 * self.num_gaussian_window)
         self.hidden, self.window_params, self.window = self.init_hidden_and_window()
-        self.training = True  # Training mode by default
+        self.re_init = True  # Re initialize the hidden and window params when forward is called
 
     def forward(self, strokes, sentences, sentences_mask):
         batch_size, strokes_seq_len, _ = strokes.size()
@@ -35,7 +35,7 @@ class LSTMWithGaussianAttention(nn.Module):
         phi_seq = []
 
         # If training : initialization of the hidden state, of the window params and of the window
-        if self.training:
+        if self.re_init:
             self.hidden, self.window_params, self.window = self.init_hidden_and_window(batch_size)
 
         for t in range(strokes_seq_len):

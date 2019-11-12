@@ -57,7 +57,8 @@ class LSTMWithGaussianAttention(nn.Module):
     def init_hidden_and_window(self, batch_size=1):
 
         # init hidden
-        hidden_t = (torch.zeros(batch_size, self.hidden_dim), torch.zeros(batch_size, self.hidden_dim))
+        hidden_t = (torch.zeros(batch_size, self.hidden_dim),
+                    torch.zeros(batch_size, self.hidden_dim))
 
         # init window params
         alpha_t = torch.zeros(batch_size, self.num_gaussian_window)

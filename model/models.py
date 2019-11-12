@@ -13,7 +13,6 @@ from model.custom_layers.lstm_with_gaussian_attention import LSTMWithGaussianAtt
 
 # TODO : mef dropout: x = F.dropout(x, training=self.training)
 
-
 class UnconditionalHandwriting(BaseModel):
     """Class for Unconditional Handwriting generation
     """
@@ -28,6 +27,8 @@ class UnconditionalHandwriting(BaseModel):
         self.output_dim = 6 * num_gaussian + 1
         self.num_layers = num_layers
         self.dropout = dropout
+
+        self.device = torch.cuda.is_available()
 
         # Define the RNN and the Mixture Density layers
         self.rnn = nn.LSTM(input_size=input_dim,
@@ -57,8 +58,8 @@ class UnconditionalHandwriting(BaseModel):
         return output_mdl
 
     def init_hidden(self, batch_size=1):
-        hidden_state = torch.zeros(self.num_layers, batch_size, self.hidden_dim)
-        cell_state = torch.zeros(self.num_layers, batch_size, self.hidden_dim)
+        hidden_state = torch.zeros(self.num_layers, batch_size, self.hidden_dim, device=self.device)
+        cell_state = torch.zeros(self.num_layers, batch_size, self.hidden_dim, device=self.device)
         return hidden_state, cell_state
 
     def compute_gaussian_parameters(self, output_network, sampling_bias=0.):

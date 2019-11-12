@@ -10,13 +10,14 @@ class LSTMWithGaussianAttention(nn.Module):
     We pass as an argument a function that will be applied to the hidden state before passing it to the next cell
     """
 
-    def __init__(self, input_dim, hidden_dim, num_gaussian_window, num_chars):
+    def __init__(self, input_dim, hidden_dim, num_gaussian_window, num_chars, device):
         super(LSTMWithGaussianAttention, self).__init__()
 
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.num_gaussian_window = num_gaussian_window
         self.num_chars = num_chars
+        self.device = device
 
         self.lstm_cell = nn.LSTMCell(input_size=input_dim + self.num_chars,
                                      hidden_size=hidden_dim)
@@ -57,18 +58,19 @@ class LSTMWithGaussianAttention(nn.Module):
     def init_hidden_and_window(self, batch_size=1):
 
         # init hidden
-        hidden_t = (torch.zeros(batch_size, self.hidden_dim),
-                    torch.zeros(batch_size, self.hidden_dim))
+        hidden_t = (torch.zeros(batch_size, self.hidden_dim, device=self.device),
+                    torch.zeros(batch_size, self.hidden_dim, device=self.device))
 
         # init window params
-        alpha_t = torch.zeros(batch_size, self.num_gaussian_window)
-        beta_t  = torch.zeros(batch_size, self.num_gaussian_window)
-        kappa_t = torch.zeros(batch_size, self.num_gaussian_window)
+        alpha_t = torch.zeros(batch_size, self.num_gaussian_window, device=self.device)
+        beta_t  = torch.zeros(batch_size, self.num_gaussian_window, device=self.device)
+        kappa_t = torch.zeros(batch_size, self.num_gaussian_window, device=self.device)
         window_params_t = (alpha_t, beta_t, kappa_t)
 
         # init window
-        window_t = torch.zeros(batch_size, self.num_chars)
+        window_t = torch.zeros(batch_size, self.num_chars, device=self.device)
 
+        # Test GPU
         print(hidden_t[0].device)
         print(window_t.device)
 

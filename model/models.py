@@ -12,6 +12,7 @@ from model.custom_layers.lstm_with_gaussian_attention import LSTMWithGaussianAtt
 # add norm layer
 
 # TODO : mef dropout: x = F.dropout(x, training=self.training)
+# TODO : tej option multi-gpu
 
 class UnconditionalHandwriting(BaseModel):
     """Class for Unconditional Handwriting generation
@@ -28,7 +29,8 @@ class UnconditionalHandwriting(BaseModel):
         self.num_layers = num_layers
         self.dropout = dropout
 
-        self.device = torch.cuda.is_available()
+        # Setting an attribute device
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         # Define the RNN and the Mixture Density layers
         self.rnn = nn.LSTM(input_size=input_dim,
@@ -133,11 +135,15 @@ class ConditionalHandwriting(BaseModel):
         self.num_layers = num_layers
         self.dropout = dropout
 
+        # Setting an attribute device
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
         # Define RNN layers
         self.rnn_with_gaussian_attention = LSTMWithGaussianAttention(input_dim=input_dim,
                                                                      hidden_dim=hidden_dim,
                                                                      num_gaussian_window=num_gaussian_window,
-                                                                     num_chars=num_chars)
+                                                                     num_chars=num_chars,
+                                                                     device=self.device)
 
         self.rnn_2 = nn.LSTM(input_size=input_dim + hidden_dim + num_chars,
                              hidden_size=hidden_dim,
@@ -176,8 +182,8 @@ class ConditionalHandwriting(BaseModel):
         return output_mdl
 
     def init_hidden(self, batch_size=1):
-        hidden_state = torch.zeros(self.num_layers, batch_size, self.hidden_dim)
-        cell_state = torch.zeros(self.num_layers, batch_size, self.hidden_dim)
+        hidden_state = torch.zeros(self.num_layers, batch_size, self.hidden_dim, device=self.device)
+        cell_state = torch.zeros(self.num_layers, batch_size, self.hidden_dim, device=self.device)
         return hidden_state, cell_state
 
     def compute_gaussian_parameters(self, output_network, sampling_bias=0.):

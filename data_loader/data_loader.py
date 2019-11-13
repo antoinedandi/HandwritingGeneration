@@ -6,13 +6,6 @@ from torch.utils.data import Dataset
 from utils import plot_stroke, preprocess_sent, pad_collate
 
 
-# TODO:
-#  1) ("The co-ordinate offsets were normalised to mean 0, std. dev. 1 over the training set.", paper)
-#  2) The full transcriptions contain 80 distinct characters (capital letters, lower case letters,
-#     digits, and punctuation). However we used only a subset of 57, with all digits and most of the punctuation
-#     characters replaced with a generic ‘nonletter’ label
-
-
 class HandWritingDataset(torch.utils.data.Dataset):
     def __init__(self, data_dir):
         super().__init__()

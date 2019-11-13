@@ -48,7 +48,6 @@ def plot_stroke(stroke, save_name=None):
 
 def preprocess_sent(s):
     s = s[:-1]  # Remove '\n' character
-    # s += ' '  # Adding a space char for computing the exit condition during conditional writing  # TODO : keep this ?
     return s
 
 

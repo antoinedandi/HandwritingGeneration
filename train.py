@@ -20,12 +20,15 @@ np.random.seed(SEED)
 def main(config):
     logger = config.get_logger('train')
 
+    # Setting the device
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
     # setup data_loader instances
     data_loader = config.init_obj('data_loader', module_data)
     valid_data_loader = data_loader.split_validation()
 
     # build model architecture, then print to console
-    model = config.init_obj('arch', module_arch, char2idx=data_loader.dataset.char2idx, device='cpu')  # TODO update
+    model = config.init_obj('arch', module_arch, char2idx=data_loader.dataset.char2idx, device=device)
     logger.info(model)
 
     # get function handles of loss and metrics
@@ -43,6 +46,7 @@ def main(config):
                       metric_ftns=metrics,
                       optimizer=optimizer,
                       config=config,
+                      device=device,
                       data_loader=data_loader,
                       valid_data_loader=valid_data_loader,
                       lr_scheduler=lr_scheduler)
@@ -56,8 +60,6 @@ if __name__ == '__main__':
                       help='config file path (default: None)')
     args.add_argument('-r', '--resume', default=None, type=str,
                       help='path to latest checkpoint (default: None)')
-    args.add_argument('-d', '--device', default=None, type=str,
-                      help='indices of GPUs to enable (default: all)')
 
     # custom cli options to modify configuration from default values given in json file.
     CustomArgs = collections.namedtuple('CustomArgs', 'flags type target')

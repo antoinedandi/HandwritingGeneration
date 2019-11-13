@@ -5,15 +5,6 @@ from base import BaseModel
 from model.custom_layers.lstm_with_gaussian_attention import LSTMWithGaussianAttention
 
 
-# Changes in case their is a problem:
-# use self.hidden pour pas avoir à passer le hidden dans l'input
-# change of the eos loss (sum over the good dimension)
-# add norm layer
-
-# TODO : mef dropout: x = F.dropout(x, training=self.training)
-# TODO : tej option multi-gpu
-# TODO add char2idx and device args to our model when we create it
-
 class UnconditionalHandwriting(BaseModel):
     """Class for Unconditional Handwriting generation
     """
@@ -27,11 +18,11 @@ class UnconditionalHandwriting(BaseModel):
         self.num_gaussian = num_gaussian
         self.output_dim = 6 * num_gaussian + 1
         self.num_layers = num_layers
+        self.char2idx = char2idx
         self.dropout = dropout
 
         # Setting an attribute device
-        # TODO faut mettre ca qq part et tej les options liées au nb de gpu..
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = device
 
         # Define the RNN and the Mixture Density layers
         self.rnn_1 = nn.LSTM(input_size=input_dim,
@@ -52,21 +43,20 @@ class UnconditionalHandwriting(BaseModel):
                              dropout=dropout,
                              batch_first=True)
 
-        #  self.norm_layer = nn.LayerNorm(hidden_dim) # TODO see if useful
         self.mixture_density_layer = nn.Linear(3 * self.hidden_dim, self.output_dim)
 
     def forward(self, sentences, sentences_mask, strokes, strokes_mask):
-        # We don't need the sentences for the unconditional handwriting generation
 
+        # We don't need the sentences for the unconditional handwriting generation
         _, _, strokes, strokes_mask = sentences, sentences_mask, strokes, strokes_mask
-        batch_size = strokes.size(0)
+
+        # Forward pass
 
         # Initialization of the hidden layers
+        batch_size = strokes.size(0)
         hidden_1 = self.init_hidden(batch_size)
         hidden_2 = self.init_hidden(batch_size)
         hidden_3 = self.init_hidden(batch_size)
-
-        # Forward pass
 
         # Fist rnn
         output_rnn_1, hidden_1 = self.rnn_1(strokes, hidden_1)
@@ -79,9 +69,6 @@ class UnconditionalHandwriting(BaseModel):
         # Application of the mixture density layer
         input_mdl  = torch.cat([output_rnn_1, output_rnn_2, output_rnn_3], dim=-1)
         output_mdl = self.mixture_density_layer(input_mdl)
-
-        # Clipping the gradients of the output of the rnn
-        #nn.utils.clip_grad_value_(normalized_output_rnn, 10)  # TODO check mais ca ca sert a rien jpense
 
         return output_mdl
 
@@ -104,7 +91,7 @@ class UnconditionalHandwriting(BaseModel):
 
         return pi, mu1, mu2, sigma1, sigma2, rho, eos
 
-    def generate_sample(self, sampling_bias=1.2):
+    def generate_unconditional_sample(self, sampling_bias=2.):
         # Prepare input sequence
         stroke = [0., 0., 0.]  # init sample
         stroke = torch.tensor(stroke).view(1, 1, 3)  # (bs, seq_len, 3)
@@ -176,7 +163,7 @@ class ConditionalHandwriting(BaseModel):
         self.char2idx = char2idx
 
         # Setting an attribute device
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = device
 
         # Define RNN layers
         self.rnn_1_with_gaussian_attention = LSTMWithGaussianAttention(input_dim=input_dim,
@@ -197,8 +184,6 @@ class ConditionalHandwriting(BaseModel):
                              dropout=dropout,
                              batch_first=True)
 
-        self.norm_layer = nn.LayerNorm(3 * hidden_dim)  # TODO see if useful
-
         # Define the mixture density layer
         self.mixture_density_layer = nn.Linear(3 * self.hidden_dim, self.output_dim)
 
@@ -211,13 +196,12 @@ class ConditionalHandwriting(BaseModel):
         :return: output network
         """
 
-        batch_size = strokes.size(0)
+        # Forward pass
 
         # Initialization of the hidden layers for the rnn 2 & 3
+        batch_size = strokes.size(0)
         hidden_2 = self.init_hidden(batch_size)
         hidden_3 = self.init_hidden(batch_size)
-
-        # Forward pass
 
         # First rnn with gaussian attention
         output_rnn_1_attention, window, _ = self.rnn_1_with_gaussian_attention(strokes=strokes,
@@ -231,10 +215,6 @@ class ConditionalHandwriting(BaseModel):
         output_rnn_3, hidden_3 = self.rnn_3(input_rnn_3, hidden_3)
         # Application of the mixture density layer
         input_mdl = torch.cat([output_rnn_1_attention, output_rnn_2, output_rnn_3], dim=-1)
-
-        # TODO check added norm effect
-        input_mdl = self.norm_layer(input_mdl)
-
         output_mdl = self.mixture_density_layer(input_mdl)
 
         return output_mdl
@@ -258,15 +238,13 @@ class ConditionalHandwriting(BaseModel):
 
         return pi, mu1, mu2, sigma1, sigma2, rho, eos
 
-    def generate_cond_sample(self, sentence, sampling_bias=2.0):
+    def generate_conditional_sample(self, sentence, sampling_bias=2.0):
 
         # Adding a space char to the sentence for computing the exit condition
         sentence += ' '
 
         # Transforming the sentence into a tensor
-        sentence = torch.tensor(data=[self.char2idx[char] for char in sentence],
-                                dtype=torch.long)
-
+        sentence = torch.tensor(data=[self.char2idx[char] for char in sentence], dtype=torch.long)
         sentence_mask = torch.ones(sentence.shape)
 
         # Prepare input sequence
@@ -304,11 +282,6 @@ class ConditionalHandwriting(BaseModel):
                 if int(torch.argmax(phi)) + 1 == sentence.size(0):
                     break
 
-                # Test
-                if i % 50 == 0:
-                    print(i,' : ', int(torch.argmax(phi)))
-                    # print(phi)
-
                 # Sample the next stroke
                 eos = torch.bernoulli(eos)  # Decide whether to stop or continue the stroke
                 idx = torch.multinomial(pi[0], 1)  # Pick a gaussian with a multinomial law based on weights pi
@@ -331,17 +304,3 @@ class ConditionalHandwriting(BaseModel):
                 list_strokes.append(stroke.squeeze().numpy())
 
         return np.array(list_strokes)
-
-
-# TODO implement this class for the shared functions et ensuite conditioned and unconditioned heriteraient
-#  de cette classe
-class HandwritingGenerator(BaseModel):
-    """Class Handwriting Generation (encapsulate unconditional and conditional handwriting)
-    """
-
-    def __init__(self, input_dim, hidden_dim, num_layers, num_gaussian_out, dropout, num_chars, num_gaussian_window):
-        super(HandwritingGenerator, self).__init__()
-        self.input_dim = input_dim
-
-    def forward(self, input):
-        return input

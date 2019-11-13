@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from torchvision.utils import make_grid
+from torch.nn.utils import clip_grad_norm_
 from base import BaseTrainer
 from utils import inf_loop, MetricTracker
 
@@ -9,9 +9,9 @@ class Trainer(BaseTrainer):
     """
     Trainer class
     """
-    def __init__(self, model, criterion, metric_ftns, optimizer, config, data_loader,
-                 valid_data_loader=None, lr_scheduler=None, len_epoch=None):
-        super().__init__(model, criterion, metric_ftns, optimizer, config)
+    def __init__(self, model, criterion, metric_ftns, optimizer, config, device,
+                 data_loader, valid_data_loader=None, lr_scheduler=None, len_epoch=None):
+        super().__init__(model, criterion, metric_ftns, optimizer, config, device)
         self.config = config
         self.data_loader = data_loader
         if len_epoch is None:
@@ -52,23 +52,23 @@ class Trainer(BaseTrainer):
             loss.backward()
 
             # Gradient clipping
-            torch.nn.utils.clip_grad_norm(self.model.rnn_1_with_gaussian_attention.lstm_cell.parameters(), 10)
-            torch.nn.utils.clip_grad_norm(self.model.rnn_2.parameters(), 10)
-            torch.nn.utils.clip_grad_norm(self.model.rnn_3.parameters(), 10)
+            if str(self.model).startswith('Unconditional'):
+                clip_grad_norm_(self.model.rnn_1.parameters(), 10)
+            elif str(self.model).startswith('Conditional'):
+                clip_grad_norm_(self.model.rnn_1_with_gaussian_attention.lstm_cell.parameters(), 10)
+            clip_grad_norm_(self.model.rnn_2.parameters(), 10)
+            clip_grad_norm_(self.model.rnn_3.parameters(), 10)
 
             self.optimizer.step()
 
             self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
             self.train_metrics.update('loss', loss.item())
-            # for met in self.metric_ftns:
-            #     self.train_metrics.update(met.__name__, met(output_network, target))
 
             if batch_idx % self.log_step == 0:
                 self.logger.debug('Train Epoch: {} {} Loss: {:.6f}'.format(
                     epoch,
                     self._progress(batch_idx),
                     loss.item()))
-                # self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
 
             if batch_idx == self.len_epoch:
                 break
@@ -105,11 +105,6 @@ class Trainer(BaseTrainer):
 
                 self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
                 self.valid_metrics.update('loss', loss.item())
-
-                # TODO see if we cannot log an image of a generated sample
-                # for met in self.metric_ftns:
-                #     self.valid_metrics.update(met.__name__, met(output, target))
-                # self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
 
         # add histogram of model parameters to the tensorboard
         for name, p in self.model.named_parameters():

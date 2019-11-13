@@ -1,12 +1,11 @@
 {
     "name": "ConditionalHandwriting",
-    "n_gpu": 1,
 
     "arch": {
         "type": "ConditionalHandwriting",
         "args": {
             "input_dim": 3,
-            "hidden_dim": 300,
+            "hidden_dim": 400,
             "num_layers": 1,
             "num_gaussian_out": 20,
             "dropout": 0.3,
@@ -20,7 +19,7 @@
             "data_dir": "data/",
             "batch_size": 32,
             "shuffle": true,
-            "validation_split": 0.05,
+            "validation_split": 0.1,
             "num_workers": 0
         }
     },
@@ -42,10 +41,10 @@
         }
     },
     "trainer": {
-        "epochs": 25,
+        "epochs": 100,
 
         "save_dir": "saved/",
-        "save_period": 5,
+        "save_period": 10,
         "verbosity": 2,
         
         "monitor": "min val_loss",

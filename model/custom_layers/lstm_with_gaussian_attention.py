@@ -5,9 +5,9 @@ import torch.nn.functional as F
 
 class LSTMWithGaussianAttention(nn.Module):
     """
-    Implements a custom LSTM that can pass hidden and the result of an operation with hidden
+    Implements a custom LSTM that compute the gaussian attention window for each time step t and pass it as an argument
+    in the LSTM at time step t+1
     Cf equation (52) in the paper
-    We pass as an argument a function that will be applied to the hidden state before passing it to the next cell
     """
 
     def __init__(self, input_dim, hidden_dim, num_gaussian_window, num_chars, device):
@@ -34,7 +34,6 @@ class LSTMWithGaussianAttention(nn.Module):
         window_seq = []
         phi_seq = []
 
-        # TODO on a ptetre un problème la nan ?
         # If training : initialization of the hidden state, of the window params and of the window
         if self.re_init:
             self.hidden, self.window_params, self.window = self.init_hidden_and_window(batch_size)
@@ -87,7 +86,7 @@ class LSTMWithGaussianAttention(nn.Module):
         # Normalization of the params according to equations (49), (50), (51)
         alpha = torch.exp(alpha_hat)  # (bs, K)
         beta = torch.exp(beta_hat)
-        kappa = previous_kappa + torch.exp(kappa_hat)   # TODO regularize previous kappa ?
+        kappa = previous_kappa + torch.exp(kappa_hat)
 
         return alpha, beta, kappa
 

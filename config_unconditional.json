@@ -1,13 +1,12 @@
 {
     "name": "UnconditionalHandwriting",
-    "n_gpu": 1,
 
     "arch": {
         "type": "UnconditionalHandwriting",
         "args": {
             "input_dim": 3,
-            "hidden_dim": 300,
-            "num_layers": 2,
+            "hidden_dim": 400,
+            "num_layers": 1,
             "num_gaussian": 20,
             "dropout": 0.3
         }
@@ -40,10 +39,10 @@
         }
     },
     "trainer": {
-        "epochs": 3,
+        "epochs": 100,
 
         "save_dir": "saved/",
-        "save_period": 1,
+        "save_period": 10,
         "verbosity": 2,
         
         "monitor": "min val_loss",

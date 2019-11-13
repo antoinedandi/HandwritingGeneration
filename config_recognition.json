@@ -5,7 +5,7 @@
         "type": "Seq2SeqRecognition",
         "args": {
             "encoder_input_dim": 3,
-            "hidden_dim": 300,
+            "hidden_dim": 350,
             "num_layers": 2,
             "dropout": 0.3,
             "embed_char_dim": 50,
@@ -17,7 +17,7 @@
         "type": "HandWritingDataLoader",
         "args":{
             "data_dir": "data/",
-            "batch_size": 64,
+            "batch_size": 32,
             "shuffle": true,
             "validation_split": 0.1,
             "num_workers": 0

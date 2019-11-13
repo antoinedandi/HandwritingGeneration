@@ -34,6 +34,7 @@ class LSTMWithGaussianAttention(nn.Module):
         window_seq = []
         phi_seq = []
 
+        # TODO on a ptetre un problème la nan ?
         # If training : initialization of the hidden state, of the window params and of the window
         if self.re_init:
             self.hidden, self.window_params, self.window = self.init_hidden_and_window(batch_size)
@@ -78,7 +79,7 @@ class LSTMWithGaussianAttention(nn.Module):
 
         return hidden_t, window_params_t, window_t
 
-    def compute_window_parameters(self, hidden_t, window_params_t, eps=0.05):
+    def compute_window_parameters(self, hidden_t, window_params_t):
         window_params_hat = self.window_layer(hidden_t[0])
         alpha_hat, beta_hat, kappa_hat = window_params_hat.split(self.num_gaussian_window, dim=1)
         previous_kappa = window_params_t[-1]
@@ -86,7 +87,7 @@ class LSTMWithGaussianAttention(nn.Module):
         # Normalization of the params according to equations (49), (50), (51)
         alpha = torch.exp(alpha_hat)  # (bs, K)
         beta = torch.exp(beta_hat)
-        kappa = previous_kappa * eps + torch.exp(kappa_hat)   # TODO regularize previous kappa ?
+        kappa = previous_kappa + torch.exp(kappa_hat)   # TODO regularize previous kappa ?
 
         return alpha, beta, kappa
 

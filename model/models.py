@@ -116,7 +116,7 @@ class UnconditionalHandwriting(BaseModel):
         hidden_3 = self.init_hidden(stroke.size(0))
 
         with torch.no_grad():
-            for i in range(1000):  # sampling len
+            for i in range(700):  # sampling len
 
                 # First rnn
                 output_rnn_1, hidden_1 = self.rnn_1(stroke, hidden_1)
@@ -275,7 +275,7 @@ class ConditionalHandwriting(BaseModel):
         hidden_3 = self.init_hidden(stroke.size(0))
 
         with torch.no_grad():
-            for i in range(1000):  # sampling len
+            for i in range(700):  # sampling len
 
                 # First rnn with gaussian attention
                 output_rnn_1_attention, window, phi = self.rnn_1_with_gaussian_attention(strokes=stroke,
@@ -295,8 +295,8 @@ class ConditionalHandwriting(BaseModel):
                 pi, mu1, mu2, sigma1, sigma2, rho, eos = gaussian_params
 
                 # Exit condition
-                if int(torch.argmax(phi)) + 1 == sentence.size(0):
-                    break
+                #if int(torch.argmax(phi)) + 1 == sentence.size(0):
+                #    break
 
                 # Test
                 if i % 50 == 0:

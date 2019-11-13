@@ -197,6 +197,8 @@ class ConditionalHandwriting(BaseModel):
                              dropout=dropout,
                              batch_first=True)
 
+        self.norm_layer = nn.LayerNorm(3 * hidden_dim)  # TODO see if useful
+
         # Define the mixture density layer
         self.mixture_density_layer = nn.Linear(3 * self.hidden_dim, self.output_dim)
 
@@ -229,6 +231,10 @@ class ConditionalHandwriting(BaseModel):
         output_rnn_3, hidden_3 = self.rnn_3(input_rnn_3, hidden_3)
         # Application of the mixture density layer
         input_mdl = torch.cat([output_rnn_1_attention, output_rnn_2, output_rnn_3], dim=-1)
+
+        # TODO check added norm effect
+        input_mdl = self.norm_layer(input_mdl)
+
         output_mdl = self.mixture_density_layer(input_mdl)
 
         return output_mdl
@@ -252,7 +258,7 @@ class ConditionalHandwriting(BaseModel):
 
         return pi, mu1, mu2, sigma1, sigma2, rho, eos
 
-    def generate_cond_sample(self, sentence, sampling_bias=1.2):
+    def generate_cond_sample(self, sentence, sampling_bias=2.0):
 
         # Adding a space char to the sentence for computing the exit condition
         sentence += ' '
@@ -275,7 +281,7 @@ class ConditionalHandwriting(BaseModel):
         hidden_3 = self.init_hidden(stroke.size(0))
 
         with torch.no_grad():
-            for i in range(700):  # sampling len
+            for i in range(1000):  # sampling len
 
                 # First rnn with gaussian attention
                 output_rnn_1_attention, window, phi = self.rnn_1_with_gaussian_attention(strokes=stroke,
@@ -295,13 +301,13 @@ class ConditionalHandwriting(BaseModel):
                 pi, mu1, mu2, sigma1, sigma2, rho, eos = gaussian_params
 
                 # Exit condition
-                #if int(torch.argmax(phi)) + 1 == sentence.size(0):
-                #    break
+                if int(torch.argmax(phi)) + 1 == sentence.size(0):
+                    break
 
                 # Test
                 if i % 50 == 0:
                     print(i,' : ', int(torch.argmax(phi)))
-                    print(phi)
+                    # print(phi)
 
                 # Sample the next stroke
                 eos = torch.bernoulli(eos)  # Decide whether to stop or continue the stroke

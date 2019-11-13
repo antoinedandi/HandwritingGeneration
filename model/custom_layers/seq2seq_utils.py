@@ -38,7 +38,7 @@ class Attention(nn.Module):
         self.hidden_dim = hidden_dim
         self.device = device
         self.attn = nn.Linear(self.hidden_dim * 2, hidden_dim)
-        self.V = self.init_param(hidden_dim)
+        self.V = nn.Parameter(torch.randn(hidden_dim) / math.sqrt(hidden_dim))
 
     def forward(self, hidden, encoder_outputs):
         # Reshaping tensors for bmm
@@ -56,7 +56,7 @@ class Attention(nn.Module):
         return attn_weights.transpose(1, 2)  # (bs, 1, T)
 
     def init_param(self, *sz):
-        return nn.Parameter(torch.randn(sz) / math.sqrt(sz[0])).to(self.device)
+        return nn.Parameter(torch.randn(sz) / math.sqrt(sz[0]))
 
 
 class Decoder(nn.Module):

@@ -1,0 +1,16 @@
+2019-11-13 23:05:07,724 - experiments - INFO - Seq2SeqRecognition(
+  (encoder): Encoder(
+    (rnn): GRU(3, 256, num_layers=2, batch_first=True, dropout=0.3, bidirectional=True)
+  )
+  (decoder): Decoder(
+    (embed): Embedding(79, 50)
+    (dropout): Dropout(p=0.3, inplace=True)
+    (attention): Attention(
+      (attn): Linear(in_features=512, out_features=256, bias=True)
+    )
+    (gru): GRU(306, 256, num_layers=2, batch_first=True, dropout=0.3)
+    (out): Linear(in_features=512, out_features=79, bias=True)
+  )
+)
+Trainable parameters: 2587581
+2019-11-13 23:05:07,727 - experiments - INFO - Loading checkpoint: saved/models/Seq2SeqHandwritingRecognition/1113_213721/model_best.pth ...

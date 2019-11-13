@@ -355,5 +355,25 @@ class Seq2SeqRecognition(BaseModel):
         return outputs  # (bs, char_seq_len, num_chars)
 
     def recognize_sample(self, stroke, max_len=30):
-        stroke = stroke.unsqueeze()
-        return 0
+        strokes = stroke.unsqueeze(0)
+        # init output tensor
+        outputs = []
+
+        with torch.no_grad():
+
+            encoder_output, hidden = self.encoder(strokes)
+            hidden = hidden[:self.num_layers]
+            output = torch.tensor([[self.char2idx['<sos>']] for i in range(1)], device=self.device)  # sos tokens
+
+            for t in range(1, max_len):
+                output, hidden, attn_weights = self.decoder(output, hidden, encoder_output)
+                predicted_char = output.max(dim=1)[1]
+                output = predicted_char
+
+                # Exit condition
+                if int(predicted_char[0]) == 0:  # <eos> token
+                    break
+
+                outputs.append(int(predicted_char[0]))
+
+        return outputs

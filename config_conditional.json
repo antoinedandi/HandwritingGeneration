@@ -17,7 +17,7 @@
         "type": "HandWritingDataLoader",
         "args":{
             "data_dir": "data/",
-            "batch_size": 32,
+            "batch_size": 64,
             "shuffle": true,
             "validation_split": 0.1,
             "num_workers": 0

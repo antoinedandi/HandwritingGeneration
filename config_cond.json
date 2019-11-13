@@ -20,7 +20,7 @@
             "data_dir": "data/",
             "batch_size": 32,
             "shuffle": true,
-            "validation_split": 0.1,
+            "validation_split": 0.05,
             "num_workers": 0
         }
     },
@@ -42,10 +42,10 @@
         }
     },
     "trainer": {
-        "epochs": 5,
+        "epochs": 25,
 
         "save_dir": "saved/",
-        "save_period": 2,
+        "save_period": 5,
         "verbosity": 2,
         
         "monitor": "min val_loss",

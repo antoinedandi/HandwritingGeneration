@@ -52,7 +52,6 @@ class Trainer(BaseTrainer):
             loss.backward()
 
             # Gradient clipping
-            torch.nn.utils.clip_grad_norm(loss.parameters(), 100)
             torch.nn.utils.clip_grad_norm(self.model.rnn_1_with_gaussian_attention.lstm_cell.parameters(), 10)
             torch.nn.utils.clip_grad_norm(self.model.rnn_2.parameters(), 10)
             torch.nn.utils.clip_grad_norm(self.model.rnn_3.parameters(), 10)

@@ -1,8 +1,10 @@
+import random
 import numpy as np
 import torch
 import torch.nn as nn
 from base import BaseModel
 from model.custom_layers.lstm_with_gaussian_attention import LSTMWithGaussianAttention
+from model.custom_layers.seq2seq_utils import Encoder, Decoder, Attention
 
 
 class UnconditionalHandwriting(BaseModel):
@@ -304,3 +306,54 @@ class ConditionalHandwriting(BaseModel):
                 list_strokes.append(stroke.squeeze().numpy())
 
         return np.array(list_strokes)
+
+
+class Seq2SeqRecognition(BaseModel):
+    def __init__(self, encoder_input_dim, hidden_dim, num_layers, dropout, num_chars, embed_char_dim, char2idx, device):
+        super(Seq2SeqRecognition, self).__init__()
+
+        self.num_layers = num_layers
+        self.device = device
+
+        # Adding sos and eos tokens to vocab
+        char2idx['<sos>'] = len(char2idx) + 1
+        self.char2idx = char2idx
+        self.num_chars = num_chars + 1
+
+        self.encoder = Encoder(input_dim=encoder_input_dim,
+                               hidden_dim=hidden_dim,
+                               num_layers=num_layers,
+                               dropout=dropout,
+                               device=device)
+        self.decoder = Decoder(embed_dim=embed_char_dim,
+                               hidden_dim=hidden_dim,
+                               num_chars=self.num_chars,
+                               num_layers=num_layers,
+                               dropout=dropout,
+                               device=device)
+
+    def forward(self, sentences, sentences_mask, strokes, strokes_mask, teacher_forcing_ratio=0.5):
+        # Add sos tokens to the sentences
+        batch_size = sentences.size(0)
+        sos_tensor = torch.tensor([[self.char2idx['<sos>']] for i in range(batch_size)], device=self.device)
+        sentences = torch.cat([sos_tensor, sentences], dim=-1)
+        max_len = sentences.size(1)
+
+        # init output tensor
+        outputs = torch.zeros(batch_size, max_len, self.num_chars, device=self.device)
+
+        encoder_output, hidden = self.encoder(strokes)
+        hidden = hidden[:self.num_layers]
+        output = sentences[:, 0]  # sos tokens
+        for t in range(1, max_len):
+            output, hidden, attn_weights = self.decoder(output, hidden, encoder_output)
+            outputs[:, t, :] = output  # (bs, T, num chars)
+            is_teacher = random.random() < teacher_forcing_ratio
+            predicted_char = output.max(dim=1)[1]
+            output = sentences[:, t] if is_teacher else predicted_char
+
+        return outputs  # (bs, char_seq_len, num_chars)
+
+    def recognize_sample(self, stroke, max_len=30):
+        stroke = stroke.unsqueeze()
+        return 0

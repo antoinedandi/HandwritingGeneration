@@ -46,18 +46,36 @@ class Trainer(BaseTrainer):
 
             # Compute the loss and perform an optimization step
             self.optimizer.zero_grad()
-            output_network = self.model(sentences, sentences_mask, strokes, strokes_mask)
-            gaussian_params = self.model.compute_gaussian_parameters(output_network)
-            loss = self.criterion(gaussian_params, strokes, strokes_mask)
-            loss.backward()
 
-            # Gradient clipping
             if str(self.model).startswith('Unconditional'):
+                output_network = self.model(sentences, sentences_mask, strokes, strokes_mask)
+                gaussian_params = self.model.compute_gaussian_parameters(output_network)
+                loss = self.criterion(gaussian_params, strokes, strokes_mask)
+                loss.backward()
+                # Gradient clipping
                 clip_grad_norm_(self.model.rnn_1.parameters(), 10)
+                clip_grad_norm_(self.model.rnn_2.parameters(), 10)
+                clip_grad_norm_(self.model.rnn_3.parameters(), 10)
+
             elif str(self.model).startswith('Conditional'):
+                output_network = self.model(sentences, sentences_mask, strokes, strokes_mask)
+                gaussian_params = self.model.compute_gaussian_parameters(output_network)
+                loss = self.criterion(gaussian_params, strokes, strokes_mask)
+                loss.backward()
+                # Gradient clipping
                 clip_grad_norm_(self.model.rnn_1_with_gaussian_attention.lstm_cell.parameters(), 10)
-            clip_grad_norm_(self.model.rnn_2.parameters(), 10)
-            clip_grad_norm_(self.model.rnn_3.parameters(), 10)
+                clip_grad_norm_(self.model.rnn_2.parameters(), 10)
+                clip_grad_norm_(self.model.rnn_3.parameters(), 10)
+
+            elif str(self.model).startswith('Seq2Seq'):
+                output_network = self.model(sentences, sentences_mask, strokes, strokes_mask)
+                loss = self.criterion(output_network, sentences, sentences_mask)
+                loss.backward()
+                # Gradient clipping
+                clip_grad_norm_(self.model.parameters(), 10)
+
+            else:
+                NotImplementedError("Not a valid model name")
 
             self.optimizer.step()
 
@@ -99,9 +117,22 @@ class Trainer(BaseTrainer):
                 strokes, strokes_mask = strokes.to(self.device), strokes_mask.to(self.device)
 
                 # Compute the loss
-                output_network = self.model(sentences, sentences_mask, strokes, strokes_mask)
-                gaussian_params = self.model.compute_gaussian_parameters(output_network)
-                loss = self.criterion(gaussian_params, strokes, strokes_mask)
+                if str(self.model).startswith('Unconditional'):
+                    output_network = self.model(sentences, sentences_mask, strokes, strokes_mask)
+                    gaussian_params = self.model.compute_gaussian_parameters(output_network)
+                    loss = self.criterion(gaussian_params, strokes, strokes_mask)
+
+                elif str(self.model).startswith('Conditional'):
+                    output_network = self.model(sentences, sentences_mask, strokes, strokes_mask)
+                    gaussian_params = self.model.compute_gaussian_parameters(output_network)
+                    loss = self.criterion(gaussian_params, strokes, strokes_mask)
+
+                elif str(self.model).startswith('Seq2Seq'):
+                    output_network = self.model(sentences, sentences_mask, strokes, strokes_mask)
+                    loss = self.criterion(output_network, sentences, sentences_mask)
+
+                else:
+                    NotImplementedError("Not a valid model name")
 
                 self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
                 self.valid_metrics.update('loss', loss.item())

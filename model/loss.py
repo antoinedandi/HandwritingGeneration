@@ -1,5 +1,6 @@
 import math
 import torch
+import torch.nn.functional as F
 
 
 def handwriting_generation_loss(gaussian_params, strokes, strokes_mask, eps=1e-6):
@@ -12,8 +13,6 @@ def handwriting_generation_loss(gaussian_params, strokes, strokes_mask, eps=1e-6
     target_eos = strokes[:, 1:, 0].unsqueeze(-1)      # We remove the first target
     target_x1 = strokes[:, 1:, 1].unsqueeze(-1)       # We remove the first target
     target_x2 = strokes[:, 1:, 2].unsqueeze(-1)       # We remove the first target
-    # target_x1 = target_x1.repeat(1, 1, num_gaussian)
-    # target_x2 = target_x2.repeat(1, 1, num_gaussian)
 
     # 1) Compute gaussian loss
 
@@ -40,3 +39,32 @@ def handwriting_generation_loss(gaussian_params, strokes, strokes_mask, eps=1e-6
     eos_loss = (eos_loss * strokes_mask.float()).sum(1).mean()
 
     return gaussian_loss + eos_loss
+
+
+def handwriting_recognition_loss(output_network, sentences, sentences_mask):
+    # output_network shape (bs, char_seq_len, num_chars)
+
+    # TODO
+    # if faut décaler le sentences_mask pour définir un eos à 0
+
+    # Reshape output network
+    batch_size = output_network.size(0)
+    num_chars = output_network.size(2)
+    output_network = output_network[:, 1:].reshape(-1, num_chars)
+
+    # Define target
+    target = sentences.reshape(-1)
+
+    # Shifting the target mask to the right -> the first 0 padding for each seq will play the role of an <eos> token
+    shift_tensor = torch.tensor([[True] for i in range(batch_size)], device=sentences.device)
+    sentences_mask = torch.cat([shift_tensor, sentences_mask], dim=-1)
+    sentences_mask = sentences_mask[:, :-1]
+
+    # Defining target mask
+    target_mask = sentences_mask.reshape(-1).float()
+
+    nll = F.nll_loss(output_network, target, reduction='none')
+    nll = nll * target_mask
+    nll = nll.sum() / batch_size
+
+    return nll

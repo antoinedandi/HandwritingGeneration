@@ -309,9 +309,11 @@ class ConditionalHandwriting(BaseModel):
 
 
 class Seq2SeqRecognition(BaseModel):
-    def __init__(self, encoder_input_dim, hidden_dim, num_layers, dropout, num_chars, embed_char_dim, char2idx, device):
+    def __init__(self, encoder_input_dim, hidden_dim, num_layers, dropout, num_chars, embed_char_dim,
+                 teacher_forcing_ratio, char2idx, device):
         super(Seq2SeqRecognition, self).__init__()
 
+        self.teacher_forcing_ratio = teacher_forcing_ratio
         self.num_layers = num_layers
         self.device = device
 
@@ -332,7 +334,7 @@ class Seq2SeqRecognition(BaseModel):
                                dropout=dropout,
                                device=device)
 
-    def forward(self, sentences, sentences_mask, strokes, strokes_mask, teacher_forcing_ratio=0.5):
+    def forward(self, sentences, sentences_mask, strokes, strokes_mask):
         # Add sos tokens to the sentences
         batch_size = sentences.size(0)
         sos_tensor = torch.tensor([[self.char2idx['<sos>']] for i in range(batch_size)], device=self.device)
@@ -348,13 +350,13 @@ class Seq2SeqRecognition(BaseModel):
         for t in range(1, max_len):
             output, hidden, attn_weights = self.decoder(output, hidden, encoder_output)
             outputs[:, t, :] = output  # (bs, T, num chars)
-            is_teacher = random.random() < teacher_forcing_ratio
+            is_teacher = random.random() < self.teacher_forcing_ratio
             predicted_char = output.max(dim=1)[1]
             output = sentences[:, t] if is_teacher else predicted_char
 
         return outputs  # (bs, char_seq_len, num_chars)
 
-    def recognize_sample(self, stroke, max_len=30):
+    def recognize_sample(self, stroke, max_len=50):
         strokes = stroke.unsqueeze(0)
         # init output tensor
         outputs = []
@@ -363,17 +365,15 @@ class Seq2SeqRecognition(BaseModel):
 
             encoder_output, hidden = self.encoder(strokes)
             hidden = hidden[:self.num_layers]
-            output = torch.tensor([[self.char2idx['<sos>']] for i in range(1)], device=self.device)  # sos tokens
+            output = torch.tensor([self.char2idx['<sos>'] for i in range(1)], device=self.device)  # sos tokens
 
             for t in range(1, max_len):
                 output, hidden, attn_weights = self.decoder(output, hidden, encoder_output)
                 predicted_char = output.max(dim=1)[1]
                 output = predicted_char
-
                 # Exit condition
                 if int(predicted_char[0]) == 0:  # <eos> token
                     break
-
                 outputs.append(int(predicted_char[0]))
 
         return outputs

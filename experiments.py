@@ -41,10 +41,11 @@ def main(config):
             plot_stroke(sampled_stroke)
 
         elif str(model).startswith('Seq2Seq'):
-            stroke = data_loader.dataset[0]
-            predicted_seq = model.recognize_sample(stroke)
-            print(predicted_seq)
+            sent, stroke = data_loader.dataset[8]
 
+            predicted_seq = model.recognize_sample(stroke)
+            print('real text:      ', data_loader.dataset.tensor2sentence(sent))
+            print('predicted text: ', data_loader.dataset.tensor2sentence(torch.tensor(predicted_seq)), ' <end>')
 
 
 if __name__ == '__main__':

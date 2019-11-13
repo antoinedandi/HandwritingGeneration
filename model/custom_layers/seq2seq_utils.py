@@ -55,9 +55,6 @@ class Attention(nn.Module):
 
         return attn_weights.transpose(1, 2)  # (bs, 1, T)
 
-    def init_param(self, *sz):
-        return nn.Parameter(torch.randn(sz) / math.sqrt(sz[0]))
-
 
 class Decoder(nn.Module):
     def __init__(self, embed_dim, hidden_dim, num_chars, num_layers, dropout, device):
@@ -78,9 +75,9 @@ class Decoder(nn.Module):
                           batch_first=True)
         self.out = nn.Linear(hidden_dim * 2, num_chars)
 
-    def forward(self, input_batch, last_hidden, encoder_outputs):
+    def forward(self, last_chars, last_hidden, encoder_outputs):
         # Get the embedding of the current input char (last output char)
-        embedded_char = self.embed(input_batch).unsqueeze(1)  # (bs,1,N)
+        embedded_char = self.embed(last_chars).unsqueeze(1)  # (bs,1,N)
         embedded_char = self.dropout(embedded_char)
         # Calculate attention weights and apply to encoder outputs
         attn_weights = self.attention(last_hidden[-1], encoder_outputs)

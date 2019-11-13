@@ -44,9 +44,6 @@ def handwriting_generation_loss(gaussian_params, strokes, strokes_mask, eps=1e-6
 def handwriting_recognition_loss(output_network, sentences, sentences_mask):
     # output_network shape (bs, char_seq_len, num_chars)
 
-    # TODO
-    # if faut décaler le sentences_mask pour définir un eos à 0
-
     # Reshape output network
     batch_size = output_network.size(0)
     num_chars = output_network.size(2)

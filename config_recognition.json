@@ -5,11 +5,12 @@
         "type": "Seq2SeqRecognition",
         "args": {
             "encoder_input_dim": 3,
-            "hidden_dim": 50,
+            "hidden_dim": 400,
             "num_layers": 2,
             "dropout": 0.3,
             "embed_char_dim": 50,
-            "num_chars": 78
+            "num_chars": 78,
+            "teacher_forcing_ratio": 0.5
         }
     },
     "data_loader": {
@@ -40,14 +41,14 @@
         }
     },
     "trainer": {
-        "epochs": 1,
+        "epochs": 100,
 
         "save_dir": "saved/",
-        "save_period": 1,
+        "save_period": 10,
         "verbosity": 2,
         
         "monitor": "min val_loss",
-        "early_stop": 10,
+        "early_stop": 15,
 
         "tensorboard": true
     }

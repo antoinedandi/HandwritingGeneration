@@ -5,7 +5,7 @@
         "type": "ConditionalHandwriting",
         "args": {
             "input_dim": 3,
-            "hidden_dim": 400,
+            "hidden_dim": 300,
             "num_layers": 1,
             "num_gaussian_out": 20,
             "dropout": 0.3,
@@ -17,7 +17,7 @@
         "type": "HandWritingDataLoader",
         "args":{
             "data_dir": "data/",
-            "batch_size": 64,
+            "batch_size": 32,
             "shuffle": true,
             "validation_split": 0.1,
             "num_workers": 0
@@ -41,10 +41,10 @@
         }
     },
     "trainer": {
-        "epochs": 100,
+        "epochs": 40,
 
         "save_dir": "saved/",
-        "save_period": 10,
+        "save_period": 5,
         "verbosity": 2,
         
         "monitor": "min val_loss",

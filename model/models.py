@@ -93,7 +93,7 @@ class UnconditionalHandwriting(BaseModel):
 
         return pi, mu1, mu2, sigma1, sigma2, rho, eos
 
-    def generate_unconditional_sample(self, sampling_bias=2.):
+    def generate_unconditional_sample(self, sampling_bias=1.):
         # Prepare input sequence
         stroke = [0., 0., 0.]  # init sample
         stroke = torch.tensor(stroke).view(1, 1, 3)  # (bs, seq_len, 3)
@@ -240,7 +240,7 @@ class ConditionalHandwriting(BaseModel):
 
         return pi, mu1, mu2, sigma1, sigma2, rho, eos
 
-    def generate_conditional_sample(self, sentence, sampling_bias=2.0):
+    def generate_conditional_sample(self, sentence, sampling_bias=1.):
 
         # Adding a space char to the sentence for computing the exit condition
         sentence += ' '
@@ -261,7 +261,7 @@ class ConditionalHandwriting(BaseModel):
         hidden_3 = self.init_hidden(stroke.size(0))
 
         with torch.no_grad():
-            for i in range(1000):  # sampling len
+            for i in range(700):  # sampling len
 
                 # First rnn with gaussian attention
                 output_rnn_1_attention, window, phi = self.rnn_1_with_gaussian_attention(strokes=stroke,

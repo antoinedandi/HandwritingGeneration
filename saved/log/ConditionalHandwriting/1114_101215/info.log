@@ -1,0 +1,143 @@
+2019-11-14 10:12:18,430 - train - INFO - ConditionalHandwriting(
+  (rnn_1_with_gaussian_attention): LSTMWithGaussianAttention(
+    (lstm_cell): LSTMCell(81, 300)
+    (window_layer): Linear(in_features=300, out_features=30, bias=True)
+  )
+  (rnn_2): LSTM(381, 300, batch_first=True, dropout=0.3)
+  (rnn_3): LSTM(381, 300, batch_first=True, dropout=0.3)
+  (mixture_density_layer): Linear(in_features=900, out_features=121, bias=True)
+)
+Trainable parameters: 2216851
+2019-11-14 10:20:36,766 - trainer - INFO -     epoch          : 1
+2019-11-14 10:20:36,766 - trainer - INFO -     loss           : 813.1492497370793
+2019-11-14 10:20:36,766 - trainer - INFO -     val_loss       : 316.87573724043995
+2019-11-14 10:28:51,371 - trainer - INFO -     epoch          : 2
+2019-11-14 10:28:51,371 - trainer - INFO -     loss           : 242.39210794663288
+2019-11-14 10:28:51,371 - trainer - INFO -     val_loss       : 184.00881235223068
+2019-11-14 10:37:06,607 - trainer - INFO -     epoch          : 3
+2019-11-14 10:37:06,608 - trainer - INFO -     loss           : 135.45949123314853
+2019-11-14 10:37:06,608 - trainer - INFO -     val_loss       : 104.11891174316406
+2019-11-14 10:45:20,003 - trainer - INFO -     epoch          : 4
+2019-11-14 10:45:20,003 - trainer - INFO -     loss           : 76.6523639295228
+2019-11-14 10:45:20,003 - trainer - INFO -     val_loss       : 54.09360544305099
+2019-11-14 10:53:30,992 - trainer - INFO -     epoch          : 5
+2019-11-14 10:53:30,992 - trainer - INFO -     loss           : 39.8124047680014
+2019-11-14 10:53:30,993 - trainer - INFO -     val_loss       : 22.732478894685443
+2019-11-14 10:53:31,104 - trainer - INFO - Saving checkpoint: saved/models/ConditionalHandwriting/1114_101215/checkpoint-epoch5.pth ...
+2019-11-14 10:53:31,230 - trainer - INFO - Saving current best: model_best.pth ...
+2019-11-14 11:01:41,554 - trainer - INFO -     epoch          : 6
+2019-11-14 11:01:41,555 - trainer - INFO -     loss           : 10.177619888937684
+2019-11-14 11:01:41,555 - trainer - INFO -     val_loss       : -3.541105169998972
+2019-11-14 11:09:50,389 - trainer - INFO -     epoch          : 7
+2019-11-14 11:09:50,389 - trainer - INFO -     loss           : -13.410949436165172
+2019-11-14 11:09:50,389 - trainer - INFO -     val_loss       : -22.774485738653887
+2019-11-14 11:17:55,900 - trainer - INFO -     epoch          : 8
+2019-11-14 11:17:55,901 - trainer - INFO -     loss           : -35.96340271989269
+2019-11-14 11:17:55,901 - trainer - INFO -     val_loss       : -43.50004959106445
+2019-11-14 11:25:59,338 - trainer - INFO -     epoch          : 9
+2019-11-14 11:25:59,339 - trainer - INFO -     loss           : -65.25091308954904
+2019-11-14 11:25:59,339 - trainer - INFO -     val_loss       : -67.93827257658306
+2019-11-14 11:34:00,659 - trainer - INFO -     epoch          : 10
+2019-11-14 11:34:00,660 - trainer - INFO -     loss           : -81.6217170579899
+2019-11-14 11:34:00,660 - trainer - INFO -     val_loss       : -79.22235950670745
+2019-11-14 11:34:00,778 - trainer - INFO - Saving checkpoint: saved/models/ConditionalHandwriting/1114_101215/checkpoint-epoch10.pth ...
+2019-11-14 11:34:00,915 - trainer - INFO - Saving current best: model_best.pth ...
+2019-11-14 11:41:59,184 - trainer - INFO -     epoch          : 11
+2019-11-14 11:41:59,184 - trainer - INFO -     loss           : -85.50749497724003
+2019-11-14 11:41:59,185 - trainer - INFO -     val_loss       : -99.40454924734016
+2019-11-14 11:49:57,075 - trainer - INFO -     epoch          : 12
+2019-11-14 11:49:57,076 - trainer - INFO -     loss           : -121.45978024725378
+2019-11-14 11:49:57,076 - trainer - INFO -     val_loss       : -128.24096037212172
+2019-11-14 11:58:07,607 - trainer - INFO -     epoch          : 13
+2019-11-14 11:58:07,607 - trainer - INFO -     loss           : -144.8419708387386
+2019-11-14 11:58:07,607 - trainer - INFO -     val_loss       : -149.386768541838
+2019-11-14 12:06:19,505 - trainer - INFO -     epoch          : 14
+2019-11-14 12:06:19,505 - trainer - INFO -     loss           : -159.5569288490792
+2019-11-14 12:06:19,506 - trainer - INFO -     val_loss       : -148.33368160850122
+2019-11-14 12:14:37,647 - trainer - INFO -     epoch          : 15
+2019-11-14 12:14:37,648 - trainer - INFO -     loss           : -180.36224432950894
+2019-11-14 12:14:37,648 - trainer - INFO -     val_loss       : -164.670948229338
+2019-11-14 12:14:37,763 - trainer - INFO - Saving checkpoint: saved/models/ConditionalHandwriting/1114_101215/checkpoint-epoch15.pth ...
+2019-11-14 12:14:37,879 - trainer - INFO - Saving current best: model_best.pth ...
+2019-11-14 12:22:59,689 - trainer - INFO -     epoch          : 16
+2019-11-14 12:22:59,689 - trainer - INFO -     loss           : -193.9127671732705
+2019-11-14 12:22:59,690 - trainer - INFO -     val_loss       : -176.08527936433492
+2019-11-14 12:31:05,042 - trainer - INFO -     epoch          : 17
+2019-11-14 12:31:05,042 - trainer - INFO -     loss           : -206.09975792247164
+2019-11-14 12:31:05,042 - trainer - INFO -     val_loss       : -196.3197559557463
+2019-11-14 12:39:13,906 - trainer - INFO -     epoch          : 18
+2019-11-14 12:39:13,906 - trainer - INFO -     loss           : -216.15192499104336
+2019-11-14 12:39:13,907 - trainer - INFO -     val_loss       : -203.50964837325247
+2019-11-14 12:47:20,241 - trainer - INFO -     epoch          : 19
+2019-11-14 12:47:20,242 - trainer - INFO -     loss           : -226.54999077249562
+2019-11-14 12:47:20,242 - trainer - INFO -     val_loss       : -209.24781879625823
+2019-11-14 12:55:31,328 - trainer - INFO -     epoch          : 20
+2019-11-14 12:55:31,329 - trainer - INFO -     loss           : -234.50007516533665
+2019-11-14 12:55:31,329 - trainer - INFO -     val_loss       : -216.98956298828125
+2019-11-14 12:55:31,438 - trainer - INFO - Saving checkpoint: saved/models/ConditionalHandwriting/1114_101215/checkpoint-epoch20.pth ...
+2019-11-14 12:55:31,571 - trainer - INFO - Saving current best: model_best.pth ...
+2019-11-14 13:03:44,845 - trainer - INFO -     epoch          : 21
+2019-11-14 13:03:44,845 - trainer - INFO -     loss           : -243.31329318616517
+2019-11-14 13:03:44,846 - trainer - INFO -     val_loss       : -221.18270472476357
+2019-11-14 13:11:55,165 - trainer - INFO -     epoch          : 22
+2019-11-14 13:11:55,166 - trainer - INFO -     loss           : -252.02127133882962
+2019-11-14 13:11:55,166 - trainer - INFO -     val_loss       : -224.7037562320107
+2019-11-14 13:20:17,767 - trainer - INFO -     epoch          : 23
+2019-11-14 13:20:17,767 - trainer - INFO -     loss           : -258.4773728410168
+2019-11-14 13:20:17,768 - trainer - INFO -     val_loss       : -228.03264899002878
+2019-11-14 13:28:38,799 - trainer - INFO -     epoch          : 24
+2019-11-14 13:28:38,800 - trainer - INFO -     loss           : -265.1302873058432
+2019-11-14 13:28:38,800 - trainer - INFO -     val_loss       : -237.60679546155427
+2019-11-14 13:37:12,040 - trainer - INFO -     epoch          : 25
+2019-11-14 13:37:12,041 - trainer - INFO -     loss           : -271.251614226392
+2019-11-14 13:37:12,041 - trainer - INFO -     val_loss       : -232.81090103952508
+2019-11-14 13:37:12,168 - trainer - INFO - Saving checkpoint: saved/models/ConditionalHandwriting/1114_101215/checkpoint-epoch25.pth ...
+2019-11-14 13:45:42,605 - trainer - INFO -     epoch          : 26
+2019-11-14 13:45:42,606 - trainer - INFO -     loss           : -276.95941162109375
+2019-11-14 13:45:42,606 - trainer - INFO -     val_loss       : -238.1139558490954
+2019-11-14 13:54:07,878 - trainer - INFO -     epoch          : 27
+2019-11-14 13:54:07,879 - trainer - INFO -     loss           : -281.93877830731094
+2019-11-14 13:54:07,879 - trainer - INFO -     val_loss       : -240.8675826223273
+2019-11-14 14:02:28,831 - trainer - INFO -     epoch          : 28
+2019-11-14 14:02:28,831 - trainer - INFO -     loss           : -287.7071644258217
+2019-11-14 14:02:28,831 - trainer - INFO -     val_loss       : -234.43664711400083
+2019-11-14 14:10:44,381 - trainer - INFO -     epoch          : 29
+2019-11-14 14:10:44,381 - trainer - INFO -     loss           : -293.3488503179607
+2019-11-14 14:10:44,381 - trainer - INFO -     val_loss       : -242.74832876105057
+2019-11-14 14:19:02,719 - trainer - INFO -     epoch          : 30
+2019-11-14 14:19:02,721 - trainer - INFO -     loss           : -293.6014293241783
+2019-11-14 14:19:02,722 - trainer - INFO -     val_loss       : -239.1713060077868
+2019-11-14 14:19:02,846 - trainer - INFO - Saving checkpoint: saved/models/ConditionalHandwriting/1114_101215/checkpoint-epoch30.pth ...
+2019-11-14 14:27:20,882 - trainer - INFO -     epoch          : 31
+2019-11-14 14:27:20,883 - trainer - INFO -     loss           : -303.9745231492985
+2019-11-14 14:27:20,883 - trainer - INFO -     val_loss       : -244.35894132915297
+2019-11-14 14:35:38,654 - trainer - INFO -     epoch          : 32
+2019-11-14 14:35:38,655 - trainer - INFO -     loss           : -308.1678371993748
+2019-11-14 14:35:38,655 - trainer - INFO -     val_loss       : -242.1488703677529
+2019-11-14 14:43:46,084 - trainer - INFO -     epoch          : 33
+2019-11-14 14:43:46,084 - trainer - INFO -     loss           : -313.61402188814606
+2019-11-14 14:43:46,084 - trainer - INFO -     val_loss       : -248.50959135356703
+2019-11-14 14:52:01,590 - trainer - INFO -     epoch          : 34
+2019-11-14 14:52:01,591 - trainer - INFO -     loss           : -317.47495129827917
+2019-11-14 14:52:01,591 - trainer - INFO -     val_loss       : -242.44121511358964
+2019-11-14 15:00:23,566 - trainer - INFO -     epoch          : 35
+2019-11-14 15:00:23,566 - trainer - INFO -     loss           : -322.8132028974725
+2019-11-14 15:00:23,567 - trainer - INFO -     val_loss       : -247.63665369937294
+2019-11-14 15:00:23,675 - trainer - INFO - Saving checkpoint: saved/models/ConditionalHandwriting/1114_101215/checkpoint-epoch35.pth ...
+2019-11-14 15:08:45,174 - trainer - INFO -     epoch          : 36
+2019-11-14 15:08:45,176 - trainer - INFO -     loss           : -326.8870443310258
+2019-11-14 15:08:45,176 - trainer - INFO -     val_loss       : -249.18238107781661
+2019-11-14 15:17:00,873 - trainer - INFO -     epoch          : 37
+2019-11-14 15:17:00,874 - trainer - INFO -     loss           : -330.55080553765833
+2019-11-14 15:17:00,874 - trainer - INFO -     val_loss       : -245.47735595703125
+2019-11-14 15:25:11,433 - trainer - INFO -     epoch          : 38
+2019-11-14 15:25:11,434 - trainer - INFO -     loss           : -335.0641056038219
+2019-11-14 15:25:11,435 - trainer - INFO -     val_loss       : -246.591209010074
+2019-11-14 15:33:25,051 - trainer - INFO -     epoch          : 39
+2019-11-14 15:33:25,052 - trainer - INFO -     loss           : -339.9364977955113
+2019-11-14 15:33:25,052 - trainer - INFO -     val_loss       : -248.29969064812911
+2019-11-14 15:41:39,258 - trainer - INFO -     epoch          : 40
+2019-11-14 15:41:39,258 - trainer - INFO -     loss           : -344.2305950638811
+2019-11-14 15:41:39,259 - trainer - INFO -     val_loss       : -250.18022075452302
+2019-11-14 15:41:39,372 - trainer - INFO - Saving checkpoint: saved/models/ConditionalHandwriting/1114_101215/checkpoint-epoch40.pth ...
+2019-11-14 15:41:39,503 - trainer - INFO - Saving current best: model_best.pth ...

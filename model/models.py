@@ -276,7 +276,7 @@ class ConditionalHandwriting(BaseModel):
                     break
 
                 # Sample the next stroke
-                eos = torch.bernoulli(eos)  # Decide whether to stop or continue the stroke
+                eos = torch.bernoulli(eos)         # Decide whether to stop or continue the stroke
                 idx = torch.multinomial(pi[0], 1)  # Pick a gaussian with a multinomial law based on weights pi
 
                 # Select the parameters of the picked gaussian
@@ -351,7 +351,8 @@ class Seq2SeqRecognition(BaseModel):
 
         return outputs  # (bs, char_seq_len, num_chars)
 
-    def recognize_sample(self, stroke, max_len=50):
+    def recognize_sample(self, stroke, max_len=20):
+        stroke = torch.tensor(stroke, device=self.device)
         strokes = stroke.unsqueeze(0)  # (bs=1, stroke_seq_len, 3)
         outputs = []  # predicted characters
 

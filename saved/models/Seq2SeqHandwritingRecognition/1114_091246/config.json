@@ -1,0 +1,51 @@
+{
+    "name": "Seq2SeqHandwritingRecognition",
+    "arch": {
+        "type": "Seq2SeqRecognition",
+        "args": {
+            "encoder_input_dim": 3,
+            "hidden_dim": 350,
+            "num_layers": 2,
+            "dropout": 0.3,
+            "embed_char_dim": 50,
+            "num_chars": 78,
+            "teacher_forcing_ratio": 0.5
+        }
+    },
+    "data_loader": {
+        "type": "HandWritingDataLoader",
+        "args": {
+            "data_dir": "data/",
+            "batch_size": 32,
+            "shuffle": true,
+            "validation_split": 0.1,
+            "num_workers": 0
+        }
+    },
+    "optimizer": {
+        "type": "Adam",
+        "args": {
+            "lr": 0.001,
+            "weight_decay": 0,
+            "amsgrad": true
+        }
+    },
+    "loss": "handwriting_recognition_loss",
+    "metrics": [],
+    "lr_scheduler": {
+        "type": "StepLR",
+        "args": {
+            "step_size": 50,
+            "gamma": 0.1
+        }
+    },
+    "trainer": {
+        "epochs": 100,
+        "save_dir": "saved/",
+        "save_period": 10,
+        "verbosity": 2,
+        "monitor": "min val_loss",
+        "early_stop": 15,
+        "tensorboard": true
+    }
+}

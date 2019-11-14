@@ -1,0 +1,16 @@
+2019-11-14 09:12:47,047 - experiments - INFO - Seq2SeqRecognition(
+  (encoder): Encoder(
+    (rnn): GRU(3, 350, num_layers=2, batch_first=True, dropout=0.3, bidirectional=True)
+  )
+  (decoder): Decoder(
+    (embed): Embedding(79, 50)
+    (dropout): Dropout(p=0.3, inplace=True)
+    (attention): Attention(
+      (attn): Linear(in_features=700, out_features=350, bias=True)
+    )
+    (gru): GRU(400, 350, num_layers=2, batch_first=True, dropout=0.3)
+    (out): Linear(in_features=700, out_features=79, bias=True)
+  )
+)
+Trainable parameters: 4786429
+2019-11-14 09:12:47,049 - experiments - INFO - Loading checkpoint: saved/models/model_best.pth ...

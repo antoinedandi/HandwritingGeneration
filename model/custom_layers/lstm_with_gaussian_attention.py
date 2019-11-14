@@ -6,8 +6,8 @@ import torch.nn.functional as F
 class LSTMWithGaussianAttention(nn.Module):
     """
     Implements a custom LSTM that uses its output at time t to compute the gaussian attention window at time step t
-    and then pass it as an argument in the LSTM at time step t+1
-    Cf equation (52) in the paper
+    and then pass the computed window as an argument in the LSTM at time step t+1
+    Cf equation (52) in the paper by A. Graves
     """
 
     def __init__(self, input_dim, hidden_dim, num_gaussian_window, num_chars, device):

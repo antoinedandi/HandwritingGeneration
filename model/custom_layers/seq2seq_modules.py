@@ -5,6 +5,9 @@ import torch.nn.functional as F
 
 
 class Encoder(nn.Module):
+    """
+    Encoder class for the Seq2Seq handwriting recognition model
+    """
     def __init__(self, input_dim, hidden_dim, num_layers, dropout, device):
         super(Encoder, self).__init__()
 
@@ -32,6 +35,9 @@ class Encoder(nn.Module):
 
 
 class Attention(nn.Module):
+    """
+    Attention class used by the Decoder for the Seq2Seq handwriting recognition model
+    """
     def __init__(self, hidden_dim, device):
         super(Attention, self).__init__()
         self.hidden_dim = hidden_dim
@@ -40,6 +46,7 @@ class Attention(nn.Module):
         self.V = nn.Parameter(torch.randn(hidden_dim) / math.sqrt(hidden_dim))
 
     def forward(self, hidden, encoder_outputs):
+
         # Reshaping tensors for bmm
         batch_size, stroke_seq_len = encoder_outputs.size(0), encoder_outputs.size(1)
         hidden = hidden.repeat(stroke_seq_len, 1, 1).transpose(0, 1)  # (bs, T, hidden size)
@@ -56,6 +63,9 @@ class Attention(nn.Module):
 
 
 class Decoder(nn.Module):
+    """
+    Decoder class for the Seq2Seq handwriting recognition model
+    """
     def __init__(self, embed_dim, hidden_dim, num_chars, num_layers, dropout, device):
         super(Decoder, self).__init__()
         self.embed_dim = embed_dim
@@ -80,7 +90,7 @@ class Decoder(nn.Module):
         embedded_char = self.embed(last_chars).unsqueeze(1)  # (bs,1,N)
         embedded_char = self.dropout(embedded_char)
 
-        # Calculate attention weights and apply to encoder outputs to compute the context
+        # Compute the context
         attention_weights = self.attention(last_hidden[-1], encoder_outputs)
         context = torch.bmm(attention_weights, encoder_outputs)  # (bs,1,hidden)
 

@@ -22,9 +22,8 @@ class Encoder(nn.Module):
 
     def forward(self, input_batch, hidden=None):
         output_rnn, hidden = self.rnn(input_batch, hidden)
-        # sum bidirectional outputs   # TODO a la place de ca voir si on peut pas mettre un FC
-        output_rnn = (output_rnn[:, :, :self.hidden_dim] +
-                      output_rnn[:, :, self.hidden_dim:])
+        # summing the bidirectional outputs
+        output_rnn = (output_rnn[:, :, :self.hidden_dim] + output_rnn[:, :, self.hidden_dim:])
         return output_rnn, hidden   # (bs, T, hidden_dim), (2, bs, hidden_dim)
 
     def init_hidden(self, batch_size=1):
@@ -76,17 +75,21 @@ class Decoder(nn.Module):
         self.out = nn.Linear(hidden_dim * 2, num_chars)
 
     def forward(self, last_chars, last_hidden, encoder_outputs):
-        # Get the embedding of the current input char (last output char)
+
+        # Get the embedding of the current input char
         embedded_char = self.embed(last_chars).unsqueeze(1)  # (bs,1,N)
         embedded_char = self.dropout(embedded_char)
-        # Calculate attention weights and apply to encoder outputs
-        attn_weights = self.attention(last_hidden[-1], encoder_outputs)
-        context = torch.bmm(attn_weights, encoder_outputs)  # (bs,1,hidden)
-        # Combine embedded input word and attended context, run through RNN
+
+        # Calculate attention weights and apply to encoder outputs to compute the context
+        attention_weights = self.attention(last_hidden[-1], encoder_outputs)
+        context = torch.bmm(attention_weights, encoder_outputs)  # (bs,1,hidden)
+
+        # Combine embedded input char and context and pass it in the rnn
         rnn_input = torch.cat([embedded_char, context], 2)
         output, hidden = self.gru(rnn_input, last_hidden)
         output = output.squeeze(1)  # (bs,1,hidden)
         context = context.squeeze(1)  # (bs,hidden)
         output = self.out(torch.cat([output, context], 1))
         output = F.log_softmax(output, dim=1)
-        return output, hidden, attn_weights
+
+        return output, hidden, attention_weights

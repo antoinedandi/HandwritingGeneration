@@ -61,7 +61,7 @@ def handwriting_recognition_loss(output_network, sentences, sentences_mask):
     target_mask = sentences_mask.reshape(-1).float()
 
     nll = F.nll_loss(output_network, target, reduction='none')
-    nll = nll * target_mask
+    nll = nll * target_mask  # Apply the mask
     nll = nll.sum() / batch_size
 
     return nll

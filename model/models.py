@@ -4,11 +4,12 @@ import torch
 import torch.nn as nn
 from base import BaseModel
 from model.custom_layers.lstm_with_gaussian_attention import LSTMWithGaussianAttention
-from model.custom_layers.seq2seq_utils import Encoder, Decoder, Attention
+from model.custom_layers.seq2seq_modules import Encoder, Decoder
 
 
 class UnconditionalHandwriting(BaseModel):
-    """Class for Unconditional Handwriting generation
+    """
+    Class for Unconditional Handwriting generation
     """
 
     def __init__(self, input_dim, hidden_dim, num_layers, num_gaussian, dropout, char2idx, device):
@@ -51,8 +52,6 @@ class UnconditionalHandwriting(BaseModel):
 
         # We don't need the sentences for the unconditional handwriting generation
         _, _, strokes, strokes_mask = sentences, sentences_mask, strokes, strokes_mask
-
-        # Forward pass
 
         # Initialization of the hidden layers
         batch_size = strokes.size(0)
@@ -146,7 +145,8 @@ class UnconditionalHandwriting(BaseModel):
 
 
 class ConditionalHandwriting(BaseModel):
-    """Class for Conditional Handwriting generation
+    """
+    Class for Conditional Handwriting generation
     """
 
     def __init__(self, input_dim, hidden_dim, num_layers, num_gaussian_out, dropout, num_chars, num_gaussian_window,
@@ -190,15 +190,6 @@ class ConditionalHandwriting(BaseModel):
         self.mixture_density_layer = nn.Linear(3 * self.hidden_dim, self.output_dim)
 
     def forward(self, sentences, sentences_mask, strokes, strokes_mask):
-        """
-        :param sentences:       (bs, chars_seq_len)
-        :param sentences_mask:  (bs, chars_seq_len)
-        :param strokes:         (bs, strokes_seq_len, 3)
-        :param strokes_mask:    (bs, strokes_seq_len)
-        :return: output network
-        """
-
-        # Forward pass
 
         # Initialization of the hidden layers for the rnn 2 & 3
         batch_size = strokes.size(0)
@@ -309,6 +300,9 @@ class ConditionalHandwriting(BaseModel):
 
 
 class Seq2SeqRecognition(BaseModel):
+    """
+    Class for Handwriting Recognition using a Seq2Seq with attention model
+    """
     def __init__(self, encoder_input_dim, hidden_dim, num_layers, dropout, num_chars, embed_char_dim,
                  teacher_forcing_ratio, char2idx, device):
         super(Seq2SeqRecognition, self).__init__()
@@ -317,7 +311,7 @@ class Seq2SeqRecognition(BaseModel):
         self.num_layers = num_layers
         self.device = device
 
-        # Adding sos and eos tokens to vocab
+        # Adding sos token to vocab
         char2idx['<sos>'] = len(char2idx) + 1
         self.char2idx = char2idx
         self.num_chars = num_chars + 1
@@ -335,13 +329,14 @@ class Seq2SeqRecognition(BaseModel):
                                device=device)
 
     def forward(self, sentences, sentences_mask, strokes, strokes_mask):
+
         # Add sos tokens to the sentences
         batch_size = sentences.size(0)
         sos_tensor = torch.tensor([[self.char2idx['<sos>']] for i in range(batch_size)], device=self.device)
         sentences = torch.cat([sos_tensor, sentences], dim=-1)
         max_len = sentences.size(1)
 
-        # init output tensor
+        # init outputs tensor
         outputs = torch.zeros(batch_size, max_len, self.num_chars, device=self.device)
 
         encoder_output, hidden = self.encoder(strokes)
@@ -357,16 +352,13 @@ class Seq2SeqRecognition(BaseModel):
         return outputs  # (bs, char_seq_len, num_chars)
 
     def recognize_sample(self, stroke, max_len=50):
-        strokes = stroke.unsqueeze(0)
-        # init output tensor
-        outputs = []
+        strokes = stroke.unsqueeze(0)  # (bs=1, stroke_seq_len, 3)
+        outputs = []  # predicted characters
 
         with torch.no_grad():
-
             encoder_output, hidden = self.encoder(strokes)
             hidden = hidden[:self.num_layers]
             output = torch.tensor([self.char2idx['<sos>'] for i in range(1)], device=self.device)  # sos tokens
-
             for t in range(1, max_len):
                 output, hidden, attn_weights = self.decoder(output, hidden, encoder_output)
                 predicted_char = output.max(dim=1)[1]
@@ -377,3 +369,4 @@ class Seq2SeqRecognition(BaseModel):
                 outputs.append(int(predicted_char[0]))
 
         return outputs
+

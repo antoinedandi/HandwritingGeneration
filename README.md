@@ -12,11 +12,11 @@ This repo contains a Pytorch implementation of the paper
 ## Models
 * **Unconditional Handwriting Generation**
 
-![Unconditional Handwriting](saved_figures/unconditional_handwriting.png)
+![Unconditional Handwriting](saved_figures/uncond_handwriting.png)
 
 * **Conditional Handwriting Generation**
 
-![Conditional Handwriting](saved_figures/conditional_handwriting.png)
+![Conditional Handwriting](saved_figures/cond_handwriting.png)
 
 * **Handwriting Recognition using a Seq2Seq with attention model**
 
